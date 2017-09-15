@@ -1,0 +1,11 @@
+{
+  "name": "discordapp",
+  "version": "1.0.0",
+  "description": "A discord Bot",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Hemant Joshi <codingdefined@gmail.com> (http://www.codingdefined.com)",
+  "license": "ISC"
+}
