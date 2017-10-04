@@ -1,6 +1,7 @@
 const cluster = require('cluster');
 const http = require('http');
 const numCPUs = require('os').cpus().length;
+const request = require('request');
 
 const PRICE_COMMAND = {
     check: function (event) {
@@ -59,10 +60,20 @@ const PRICE_COMMAND = {
 
 const COMMANDS = [PRICE_COMMAND];
 
+function prettyPrintDiscordEvent(event) {
+    if(event.message){
+        event = event.message;
+    }
+    if(event.content){
+        event = event.content;
+    }
+    JSON.stringify(event, null, 2)
+}
+
 function collectError(event, command, error) {
     event.message.channel.sendMessage("Error  for command `" +
         command.name + "` on event: \n```\n" +
-        JSON.stringify(event, null, 2) + "\n```\n is: \n```\n" +
+        prettyPrintDiscordEvent(event.message) + "\n```\n is: \n```\n" +
         error.stack+ "\n```");
 }
 
@@ -96,7 +107,6 @@ if (cluster.isMaster) {
     console.log(`Worker ${process.pid} started`);
 
     const Discordie = require('discordie');
-    const request = require('request');
     const Events = Discordie.Events;
     const webshot = require('webshot');
     const fs = require('fs');
