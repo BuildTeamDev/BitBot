@@ -105,7 +105,7 @@ client.Dispatcher.on(Events.MESSAGE_CREATE, e => {
 
 	if(content.toUpperCase().indexOf("BUILDTEAM") > -1 || content.toUpperCase().indexOf("BT") > -1 || content.indexOf("$buildteam") === 0 ||content.indexOf("$bt") === 0) {
 		try{
-			request('https://cryptofresh.com/api/asset/markets?asset=BUILDTEAM', function(error,res,body) {
+			/*request('https://cryptofresh.com/api/asset/markets?asset=BUILDTEAM', function(error,res,body) {
 				var object = JSON.parse(body);
 				if (error) 
 	  				return console.log(error);
@@ -115,7 +115,7 @@ client.Dispatcher.on(Events.MESSAGE_CREATE, e => {
 				else(object && object.BTS)
 					e.message.channel.sendMessage("Coin : Buildteam | Price : " + object.BTS.price + " BTS");
 				
-			});
+			});*/
 		}
 		catch (err) {
 			e.message.channel.sendMessage("Wrong ID, Have a Great Day");
