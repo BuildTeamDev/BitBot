@@ -2,30 +2,6 @@ const cluster = require('cluster');
 const http = require('http');
 const numCPUs = require('os').cpus().length;
 
-
-function checkCommands(event) {
-    COMMANDS.filter(function (command) {
-        try {
-            return command.check(event);
-        } catch (err) {
-            e.message.channel.sendMessage("Error applying filter for command " +
-                JSON.stringify(command) + " on event: ' " +
-                JSON.stringify(event) + "'");
-        }
-
-    }).forEach(function (command) {
-        try {
-            command.apply(event);
-        } catch (err) {
-            e.message.channel.sendMessage("Error applying command " +
-                JSON.stringify(command) + " on event: ' " +
-                JSON.stringify(event) + "'");
-        }
-    });
-}
-
-const COMMANDS = [PRICE_COMMAND];
-
 const PRICE_COMMAND = {
     check: function (event) {
         const content = event.message.content;
@@ -79,6 +55,29 @@ const PRICE_COMMAND = {
         });
     }
 };
+
+const COMMANDS = [PRICE_COMMAND];
+
+function checkCommands(event) {
+    COMMANDS.filter(function (command) {
+        try {
+            return command.check(event);
+        } catch (err) {
+            e.message.channel.sendMessage("Error applying filter for command " +
+                JSON.stringify(command) + " on event: ' " +
+                JSON.stringify(event) + "'");
+        }
+
+    }).forEach(function (command) {
+        try {
+            command.apply(event);
+        } catch (err) {
+            e.message.channel.sendMessage("Error applying command " +
+                JSON.stringify(command) + " on event: ' " +
+                JSON.stringify(event) + "'");
+        }
+    });
+}
 
 if (cluster.isMaster) {
     console.log(`Master ${process.pid} is running`);
