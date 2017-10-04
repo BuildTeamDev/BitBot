@@ -1,6 +1,7 @@
 const cluster = require('cluster');
 const http = require('http');
 const numCPUs = require('os').cpus().length;
+const stackinfo = require('stackinfo')
 
 const PRICE_COMMAND = {
     check: function (event) {
@@ -67,7 +68,7 @@ function checkCommands(event) {
             event.message.channel.sendMessage("Error applying filter for command " +
                 command.name + " on event: ' " +
                 JSON.stringify(event) + "' is: \n " +
-                JSON.stringify(err));
+                stackinfo(err));
         }
 
     }).forEach(function (command) {
@@ -77,7 +78,7 @@ function checkCommands(event) {
             event.message.channel.sendMessage("Error applying command " +
                 command.name + " on event: ' " +
                 JSON.stringify(event) + "' is: \n " +
-                JSON.stringify(err));
+                stackinfo(err));
         }
     });
 }

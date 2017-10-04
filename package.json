@@ -21,6 +21,7 @@
     "karma-phantomjs-launcher": "^1.0.0",
     "phantomjs": "^2.1.7",
     "phantomjs-prebuilt": "^2.1.12",
+    "stackinfo": "^1.1.5",
     "steem": "^0.6.4",
     "webshot": "^0.18.0"
   }
