@@ -78,8 +78,10 @@ const PRICE_COMMAND = {
     },
     apply: function (event) {
         const content = event.message.content;
-        let coin = content.replace("$price ", "");
-        getCoinMarketCapScreenshot(event, coin);
+        let coins = content.replace("$price ", "").split(' ');
+        for (let i = 0; i < coins.length; i++) {
+            getCoinMarketCapScreenshot(event, coins[i]);
+        }
     },
     name: '$price'
 };
