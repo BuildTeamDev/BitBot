@@ -46,6 +46,35 @@ function getCoinScreenshot(event, coin) {
     });
 }
 
+function getCoinMarketCapScreenshot(event, coin) {
+    let value;
+    request('http://api.coinmarketcap.com/v1/ticker/' + coin + '/', function (error, res, body) {
+        if (error) {
+            return collectError(event, {name: 'coinmarketcap'}, error);
+        }
+        const response = JSON.parse(body);
+        console.log(response);
+
+        if (response[0] === undefined) {
+            let a = true;
+            for (let i = 0; i < cryptoValues.length; i++) {
+                if (cryptoValues[i].symbol.toUpperCase() === coin.toUpperCase()) {
+                    a = false;
+                    getCoinScreenshot(event, cryptoValues[i].id);
+                }
+            }
+            if (a === true) {
+                event.message.channel.sendMessage("You have entered a wrong id, have a great Day :)");
+            }
+        }
+        else {
+            value = coin.toUpperCase() + " : Current Price " + response[0].price_usd + " | 24 Hour Percentage Change " + response[0].percent_change_24h;
+            //e.message.channel.sendMessage(value);
+            getCoinScreenshot(event, coin);
+        }
+    });
+}
+
 const PRICE_COMMAND = {
     check: function (event) {
         const content = event.message.content;
@@ -54,28 +83,7 @@ const PRICE_COMMAND = {
     apply: function (event) {
         const content = event.message.content;
         let coin = content.replace("$price ", "");
-        let value = '';
-        request('http://api.coinmarketcap.com/v1/ticker/' + coin + '/', function (error, res, body) {
-            const obj = JSON.parse(body);
-            console.log(obj[0]);
-            if (obj[0] === undefined) {
-                let a = true;
-                for (let i = 0; i < cryptoValues.length; i++) {
-                    if (cryptoValues[i].symbol.toUpperCase() === coin.toUpperCase()) {
-                        a = false;
-                        getCoinScreenshot(event, cryptoValues[i].id);
-                    }
-                }
-                if (a === true) {
-                    e.message.channel.sendMessage("You have entered a wrong id, have a great Day :)");
-                }
-            }
-            else {
-                value = coin.toUpperCase() + " : Current Price " + obj[0].price_usd + " | 24 Hour Percentage Change " + obj[0].percent_change_24h;
-                //e.message.channel.sendMessage(value);
-                getCoinScreenshot(event, coin);
-            }
-        });
+        getCoinMarketCapScreenshot(event, coin);
     },
     name: '$price'
 };
