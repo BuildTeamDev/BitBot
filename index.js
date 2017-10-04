@@ -53,7 +53,8 @@ const PRICE_COMMAND = {
                 }, 8000);
             }
         });
-    }
+    },
+    name: '$price'
 };
 
 const COMMANDS = [PRICE_COMMAND];
@@ -64,8 +65,9 @@ function checkCommands(event) {
             return command.check(event);
         } catch (err) {
             event.message.channel.sendMessage("Error applying filter for command " +
-                JSON.stringify(command) + " on event: ' " +
-                JSON.stringify(event) + "'");
+                command.name + " on event: ' " +
+                JSON.stringify(event) + "' is: \n " +
+                JSON.stringify(err));
         }
 
     }).forEach(function (command) {
@@ -73,8 +75,9 @@ function checkCommands(event) {
             command.apply(event);
         } catch (err) {
             event.message.channel.sendMessage("Error applying command " +
-                JSON.stringify(command) + " on event: ' " +
-                JSON.stringify(event) + "'");
+                command.name + " on event: ' " +
+                JSON.stringify(event) + "' is: \n " +
+                JSON.stringify(err));
         }
     });
 }
