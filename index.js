@@ -55,7 +55,6 @@ function getFallbackCoinMarketCapScreenshot(event, coin) {
 }
 
 function getCoinMarketCapScreenshot(event, coin) {
-    event.message.channel.sendTyping();
     request('http://api.coinmarketcap.com/v1/ticker/' + coin + '/', function (error, res, body) {
         if (error) {
             return collectError(event, {name: 'coinmarketcap'}, error);
@@ -78,9 +77,12 @@ const PRICE_COMMAND = {
     },
     apply: function (event) {
         const content = event.message.content;
-        let coins = content.replace("$price ", "").split(' ');
+        let coins = content.replace("$price ", "").replace(",", " ").replace(";", " ").split(' ');
+        event.message.channel.sendTyping();
         for (let i = 0; i < coins.length; i++) {
-            getCoinMarketCapScreenshot(event, coins[i]);
+            if(coins[i].length > 1) {
+                getCoinMarketCapScreenshot(event, coins[i]);
+            }
         }
     },
     name: '$price'
