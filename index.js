@@ -9,8 +9,8 @@ var cryptoValues = require("./crypto.json");
 var client = new Discordie();
 
 client.connect({
-	token: ''
-})
+	token: process.env.DISCORD_TOKEN
+});
 
 client.Dispatcher.on(Events.GATEWAY_READY, e => {
 	console.log('Connected as: '+ client.User.username);
