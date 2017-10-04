@@ -7,7 +7,7 @@ if (cluster.isMaster) {
     console.log(`Master ${process.pid} is running`);
 
     // Fork workers.
-    for (let i = 0; i < numCPUs; i++) {
+    for (let i = 0; i < 1; i++) {
         cluster.fork();
     }
 
@@ -19,7 +19,7 @@ if (cluster.isMaster) {
     console.log(`Worker ${process.pid} started`);
 
 
-    
+
     var Discordie = require('discordie');
     var request = require('request');
     var Events = Discordie.Events;
