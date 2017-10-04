@@ -2,6 +2,13 @@ const cluster = require('cluster');
 const http = require('http');
 const numCPUs = require('os').cpus().length;
 const request = require('request');
+const Discordie = require('discordie');
+const Events = Discordie.Events;
+const webshot = require('webshot');
+const fs = require('fs');
+const steem = require('steem');
+const cryptoValues = require("./crypto.json");
+const client = new Discordie();
 
 const PRICE_COMMAND = {
     check: function (event) {
@@ -61,10 +68,10 @@ const PRICE_COMMAND = {
 const COMMANDS = [PRICE_COMMAND];
 
 function prettyPrintDiscordEvent(event) {
-    if(event.message){
+    if (event.message) {
         event = event.message;
     }
-    if(event.content){
+    if (event.content) {
         event = event.content;
     }
     JSON.stringify(event, null, 2)
@@ -74,7 +81,7 @@ function collectError(event, command, error) {
     event.message.channel.sendMessage("Error  for command `" +
         command.name + "` on event: \n```\n" +
         prettyPrintDiscordEvent(event.message) + "\n```\n is: \n```\n" +
-        error.stack+ "\n```");
+        error.stack + "\n```");
 }
 
 function checkCommands(event) {
@@ -105,14 +112,6 @@ if (cluster.isMaster) {
     });
 } else {
     console.log(`Worker ${process.pid} started`);
-
-    const Discordie = require('discordie');
-    const Events = Discordie.Events;
-    const webshot = require('webshot');
-    const fs = require('fs');
-    const steem = require('steem');
-    const cryptoValues = require("./crypto.json");
-    const client = new Discordie();
 
     client.connect({
         token: process.env.DISCORD_TOKEN
