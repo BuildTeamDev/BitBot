@@ -36,7 +36,6 @@ function collectError(event, command, error) {
 }
 
 function getCoinScreenshot(event, coin) {
-    event.message.channel.sendTyping();
     webshot('https://gopesh-sharma.github.io/coinMarketWidget/index.html?type=' + coin, coin + '.jpeg', options, function (err) {
         if (err) {
             return collectError(event, {name: 'webshot'}, err);
@@ -46,32 +45,29 @@ function getCoinScreenshot(event, coin) {
     });
 }
 
+function getFallbackCoinMarketCapScreenshot(event, coin) {
+    for (let i = 0; i < cryptoValues.length; i++) {
+        if (cryptoValues[i].symbol.toUpperCase() === coin.toUpperCase()) {
+            return getCoinScreenshot(event, cryptoValues[i].id);
+        }
+    }
+    event.message.channel.sendMessage(`The symbol ${coin} is not on coinmarketcap.com, sorry!`);
+}
+
 function getCoinMarketCapScreenshot(event, coin) {
-    let value;
+    event.message.channel.sendTyping();
     request('http://api.coinmarketcap.com/v1/ticker/' + coin + '/', function (error, res, body) {
         if (error) {
             return collectError(event, {name: 'coinmarketcap'}, error);
         }
         const response = JSON.parse(body);
-        console.log(response);
-
         if (response[0] === undefined) {
-            let a = true;
-            for (let i = 0; i < cryptoValues.length; i++) {
-                if (cryptoValues[i].symbol.toUpperCase() === coin.toUpperCase()) {
-                    a = false;
-                    getCoinScreenshot(event, cryptoValues[i].id);
-                }
-            }
-            if (a === true) {
-                event.message.channel.sendMessage("You have entered a wrong id, have a great Day :)");
-            }
+            return getFallbackCoinMarketCapScreenshot(event, coin);
         }
-        else {
-            value = coin.toUpperCase() + " : Current Price " + response[0].price_usd + " | 24 Hour Percentage Change " + response[0].percent_change_24h;
-            //e.message.channel.sendMessage(value);
-            getCoinScreenshot(event, coin);
-        }
+        const value = coin.toUpperCase() + " : Current Price " + response[0].price_usd +
+            " | 24 Hour Percentage Change " + response[0].percent_change_24h;
+        event.message.channel.sendMessage(value);
+        getCoinScreenshot(event, coin);
     });
 }
 
