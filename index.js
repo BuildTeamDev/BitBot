@@ -63,7 +63,7 @@ function checkCommands(event) {
         try {
             return command.check(event);
         } catch (err) {
-            e.message.channel.sendMessage("Error applying filter for command " +
+            event.message.channel.sendMessage("Error applying filter for command " +
                 JSON.stringify(command) + " on event: ' " +
                 JSON.stringify(event) + "'");
         }
@@ -72,7 +72,7 @@ function checkCommands(event) {
         try {
             command.apply(event);
         } catch (err) {
-            e.message.channel.sendMessage("Error applying command " +
+            event.message.channel.sendMessage("Error applying command " +
                 JSON.stringify(command) + " on event: ' " +
                 JSON.stringify(event) + "'");
         }
