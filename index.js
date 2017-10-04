@@ -59,25 +59,26 @@ const PRICE_COMMAND = {
 
 const COMMANDS = [PRICE_COMMAND];
 
+function collectError(event, command, error) {
+    event.message.channel.sendMessage("Error  for command `" +
+        command.name + "` on event: \n```\n" +
+        JSON.stringify(event, null, 2) + "\n```\n is: \n```\n" +
+        error.stack+ "\n```");
+}
+
 function checkCommands(event) {
     COMMANDS.filter(function (command) {
         try {
             return command.check(event);
         } catch (err) {
-            event.message.channel.sendMessage("Error applying filter for command " +
-                command.name + " on event: ' " +
-                JSON.stringify(event) + "' is: \n " +
-                err.stack);
+            collectError(event, command, err);
         }
 
     }).forEach(function (command) {
         try {
             command.apply(event);
         } catch (err) {
-            event.message.channel.sendMessage("Error applying command " +
-                command.name + " on event: ' " +
-                JSON.stringify(event) + "' is: \n " +
-                err.stack);
+            collectError(event, command, err);
         }
     });
 }
