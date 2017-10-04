@@ -10,62 +10,13 @@ const steem = require('steem');
 const cryptoValues = require("./crypto.json");
 const client = new Discordie();
 
-const PRICE_COMMAND = {
-    check: function (event) {
-        const content = event.message.content;
-        return content.indexOf("$price ") === 0;
-    },
-    apply: function (event) {
-        const content = event.message.content;
-        let coin = content.replace("$price ", "");
-        let value = '';
-        request('http://api.coinmarketcap.com/v1/ticker/' + coin + '/', function (error, res, body) {
-            const obj = JSON.parse(body);
-            console.log(obj[0]);
-            if (obj[0] === undefined) {
-                let a = true;
-                for (let i = 0; i < cryptoValues.length; i++) {
-                    if (cryptoValues[i].symbol.toUpperCase() === coin.toUpperCase()) {
-                        a = false;
-                        const coin1 = cryptoValues[i].id;
-                        webshot('https://gopesh-sharma.github.io/coinMarketWidget/index.html?type=' + coin1, coin1 + '.jpeg', options, function (err) {
-                            if (err)
-                                return console.log(err);
-                            console.log('OK');
-                            //e.message.channel.uploadFile(coin + ".jpeg", null, coin.toUpperCase);
-                        });
-                        event.message.channel.sendTyping();
-                        setTimeout(function () {
-                            const source = fs.createReadStream(coin1 + '.jpeg');
-                            event.message.channel.uploadFile(source, coin1 + '.jpeg');
-                        }, 8000);
-                    }
-                }
-                if (a === true) {
-                    e.message.channel.sendMessage("You have entered a wrong id, have a great Day :)");
-                }
-            }
-            else {
-                value = coin.toUpperCase() + " : Current Price " + obj[0].price_usd + " | 24 Hour Percentage Change " + obj[0].percent_change_24h;
-                //e.message.channel.sendMessage(value);
-                webshot('https://gopesh-sharma.github.io/coinMarketWidget/index.html?type=' + coin, coin + '.jpeg', options, function (err) {
-                    if (err)
-                        return console.log(err);
-                    console.log('OK');
-                    //e.message.channel.uploadFile(coin + ".jpeg", null, coin.toUpperCase);
-                });
-                event.message.channel.sendTyping();
-                setTimeout(function () {
-                    const source = fs.createReadStream(coin + '.jpeg');
-                    event.message.channel.uploadFile(source, coin + '.jpeg');
-                }, 8000);
-            }
-        });
-    },
-    name: '$price'
+const options = {
+    screenSize: {width: 300, height: 200},
+    renderDelay: 1000,
+    quality: 100,
+    defaultWhiteBackground: true,
+    shotOffset: {left: 5, right: 5, top: 5, bottom: 5}
 };
-
-const COMMANDS = [PRICE_COMMAND];
 
 function prettyPrintDiscordEvent(event) {
     if (event.message) {
@@ -83,6 +34,53 @@ function collectError(event, command, error) {
         prettyPrintDiscordEvent(event.message) + "\n```\n is: \n```\n" +
         error.stack + "\n```");
 }
+
+function getCoinScreenshot(event, coin) {
+    event.message.channel.sendTyping();
+    webshot('https://gopesh-sharma.github.io/coinMarketWidget/index.html?type=' + coin, coin + '.jpeg', options, function (err) {
+        if (err) {
+            return collectError(event, {name: 'webshot'}, err);
+        }
+        const source = fs.createReadStream(coin + '.jpeg');
+        event.message.channel.uploadFile(source, coin + '.jpeg');
+    });
+}
+
+const PRICE_COMMAND = {
+    check: function (event) {
+        const content = event.message.content;
+        return content.indexOf("$price ") === 0;
+    },
+    apply: function (event) {
+        const content = event.message.content;
+        let coin = content.replace("$price ", "");
+        let value = '';
+        request('http://api.coinmarketcap.com/v1/ticker/' + coin + '/', function (error, res, body) {
+            const obj = JSON.parse(body);
+            console.log(obj[0]);
+            if (obj[0] === undefined) {
+                let a = true;
+                for (let i = 0; i < cryptoValues.length; i++) {
+                    if (cryptoValues[i].symbol.toUpperCase() === coin.toUpperCase()) {
+                        a = false;
+                        getCoinScreenshot(event, cryptoValues[i].id);
+                    }
+                }
+                if (a === true) {
+                    e.message.channel.sendMessage("You have entered a wrong id, have a great Day :)");
+                }
+            }
+            else {
+                value = coin.toUpperCase() + " : Current Price " + obj[0].price_usd + " | 24 Hour Percentage Change " + obj[0].percent_change_24h;
+                //e.message.channel.sendMessage(value);
+                getCoinScreenshot(event, coin);
+            }
+        });
+    },
+    name: '$price'
+};
+
+const COMMANDS = [PRICE_COMMAND];
 
 function checkCommands(event) {
     COMMANDS.filter(function (command) {
@@ -120,14 +118,6 @@ if (cluster.isMaster) {
     client.Dispatcher.on(Events.GATEWAY_READY, e => {
         console.log('Connected as: ' + client.User.username);
     });
-
-    const options = {
-        screenSize: {width: 300, height: 200},
-        renderDelay: 1000,
-        quality: 100,
-        defaultWhiteBackground: true,
-        shotOffset: {left: 5, right: 5, top: 5, bottom: 5}
-    };
 
     client.Dispatcher.on(Events.MESSAGE_CREATE, e => {
         checkCommands(e);
