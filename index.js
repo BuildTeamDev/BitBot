@@ -46,7 +46,7 @@ const PRICE_COMMAND = {
                     console.log('OK');
                     //e.message.channel.uploadFile(coin + ".jpeg", null, coin.toUpperCase);
                 });
-                e.message.channel.sendTyping();
+                event.message.channel.sendTyping();
                 setTimeout(function () {
                     const source = fs.createReadStream(coin + '.jpeg');
                     event.message.channel.uploadFile(source, coin + '.jpeg');
