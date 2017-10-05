@@ -146,7 +146,7 @@ if (cluster.isMaster) {
                     }
                     else(object && object.BTS)
                     {
-                        e.message.channel.sendMessage("Coin : " + coin + " | Price : " + object.BTS.price + " BTS");
+                        e.message.channel.sendMessage("Coin : " + coin + " | Price : " + object.BTS.price + " Bitshares");
                     }
                 });
             }
@@ -155,24 +155,26 @@ if (cluster.isMaster) {
             }
         }
 
-        if (content.toUpperCase().indexOf("BUILDTEAM") > -1 || content.toUpperCase().indexOf("BT") > -1 || content.indexOf("$buildteam") === 0 || content.indexOf("$bt") === 0) {
-            try {
-                /*request('https://cryptofresh.com/api/asset/markets?asset=BUILDTEAM', function(error,res,body) {
-                 var object = JSON.parse(body);
-                 if (error)
-                 return console.log(error);
-                 if(object && object.USD){
-                 e.message.channel.sendMessage("Coin : Buildteam | Price : " + object.USD.price + " USD");
-                 }
-                 else(object && object.BTS)
-                 e.message.channel.sendMessage("Coin : Buildteam | Price : " + object.BTS.price + " BTS");
-
-                 });*/
-            }
-            catch (err) {
-                e.message.channel.sendMessage("Wrong ID, Have a Great Day");
-            }
-        }
+        var toUpperCaseContent = content.toUpperCase();
+		var ex = /.*(BT|BUILDTEAM).*/
+		if(ex.test(toUpperCaseContent) && content.indexOf("$bts ") !== 0) {
+			try{
+				request('https://cryptofresh.com/api/asset/markets?asset=BUILDTEAM', function(error,res,body) {
+					var object = JSON.parse(body);
+					if (error) 
+	  					return console.log(error);
+					if(object && object.USD){
+						e.message.reply("Coin : Build Team | Price : " + object.USD.price + " USD");
+					}
+					else if(object && object.BTS){
+						e.message.reply("Coin : Build Team | Price : " + object.BTS.price + " Bitshares");
+					}
+				});
+			}
+			catch (err) {
+				e.message.channel.sendMessage("Wrong ID, Have a Great Day");
+			}
+		}
 
         if (content.indexOf("$created ") === 0) {
             e.message.channel.sendTyping();
