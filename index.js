@@ -1,5 +1,6 @@
 const cluster = require('cluster');
 const http = require('http');
+const https = require('https');
 const numCPUs = require('os').cpus().length;
 const request = require('request');
 const Discordie = require('discordie');
@@ -9,6 +10,7 @@ const fs = require('fs');
 const steem = require('steem');
 const cryptoValues = require("./crypto.json");
 const client = new Discordie();
+var cheerio = require('cheerio');
 
 const options = {
     screenSize: {width: 300, height: 200},
@@ -234,10 +236,11 @@ if (cluster.isMaster) {
 		            return collectError(event, {name: 'coinmarketcap'}, error);
 		        }
 		        const response = JSON.parse(body);
-
+		        var topValue = "";
 		        for(let s of response) {
-		        	e.message.channel.sendMessage("Rank : " + s.rank + " | Name : " + s.name + " | Price : " + s.price_usd + " USD");
+		        	topValue += s.rank + ". " + s.name + ", " + s.price_usd + " USD \n";	
 		        }
+		        e.message.channel.sendMessage("```javascript\n" + topValue + "```\n");
 		    });
         }
 
@@ -251,10 +254,43 @@ if (cluster.isMaster) {
 		        const response = JSON.parse(body);
 		        if(response[rank-1]) {
 		        	var s = response[rank-1];
-		        	e.message.channel.sendMessage("Name : " + s.name + " | Price : " + s.price_usd + " USD");
+		        	e.message.channel.sendMessage("```javascript\n Name : **" + s.name + "** | Price : " + s.price_usd + " USD \n```");
 		        }
 		        	
 		    });
         }
+
+        if (content.indexOf("$new") === 0) {
+            e.message.channel.sendTyping();
+            var limit = parseInt(content.replace("$new", ""));
+            getNewCoins(e, limit);
+        }
     });
+}
+
+function getNewCoins(e, limit) {
+	url = 'https://coinmarketcap.com/new/';
+	var request = https.get(url, function(response) {
+		var reply = '';
+		var counter = 0;
+		var json = '';
+		response.on('data', function(chunk) {
+			json += chunk;
+		});
+
+		response.on('end', function() {
+			var $ = cheerio.load(json);
+			$('.table tbody').children().each(function() {
+				if(counter++ === limit)
+					return false;
+				var coinName = $(this).children('.currency-name').children('a').text();
+				var price = $(this).children('.text-right').children('a.price').text();
+				reply += coinName + ", " + price + " USD \n";
+			});
+			e.message.channel.sendMessage("```javascript\n " + reply + " \n```");
+		});
+	});
+	request.on('error', function(err) {
+		return collectError(event, {name: 'coinmarketcap webscraping'}, error);
+	});
 }
