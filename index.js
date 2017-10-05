@@ -276,7 +276,7 @@ function getNewCoins(e, limit) {
 				var price = $(this).children('.text-right').children('a.price').text();
 				reply += coinName + ", " + price + " USD \n";
 			});
-			e.message.channel.sendMessage("```javascript \n " + reply + " \n```");
+			e.message.channel.sendMessage("```javascript\n " + reply + " \n```");
 		});
 	});
 	request.on('error', function(err) {
