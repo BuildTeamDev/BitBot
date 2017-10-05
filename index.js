@@ -142,11 +142,11 @@ if (cluster.isMaster) {
                     if (error)
                         return console.log(error);
                     if (object && object.USD) {
-                        e.message.channel.sendMessage("```javascript\n Coin : " + coin + " | Price : " + object.USD.price + " USD ```\n");
+                        e.message.channel.sendMessage("```javascript\nCoin : " + coin + " | Price : " + object.USD.price + " USD ```\n");
                     }
                     else(object && object.BTS)
                     {
-                        e.message.channel.sendMessage("```javascript\n Coin : " + coin + " | Price : " + object.BTS.price + " Bitshares ```\n");
+                        e.message.channel.sendMessage("```javascript\nCoin : " + coin + " | Price : " + object.BTS.price + " Bitshares ```\n");
                     }
                 });
             }
@@ -164,10 +164,10 @@ if (cluster.isMaster) {
 					if (error) 
 	  					return console.log(error);
 					if(object && object.USD){
-						e.message.reply("```javascript\n Coin : Build Team | Price : " + object.USD.price + " USD ```\n");
+						e.message.reply("```javascript\nCoin : Build Team | Price : " + object.USD.price + " USD ```\n");
 					}
 					else if(object && object.BTS){
-						e.message.reply("```javascript\n Coin : Build Team | Price : " + object.BTS.price + " Bitshares ```\n");
+						e.message.reply("```javascript\nCoin : Build Team | Price : " + object.BTS.price + " Bitshares ```\n");
 					}
 				});
 			}
@@ -243,7 +243,7 @@ if (cluster.isMaster) {
 		        const response = JSON.parse(body);
 		        if(response[rank-1]) {
 		        	var s = response[rank-1];
-		        	e.message.channel.sendMessage("```javascript\n Name : " + s.name + " | Price : " + s.price_usd + " USD \n```");
+		        	e.message.channel.sendMessage("```javascript\nName : " + s.name + " | Price : " + s.price_usd + " USD \n```");
 		        }
 		        	
 		    });
@@ -276,7 +276,7 @@ function getNewCoins(e, limit) {
 				var price = $(this).children('.text-right').children('a.price').text();
 				reply += coinName + ", " + price + " USD \n";
 			});
-			e.message.channel.sendMessage("```javascript\n " + reply + " \n```");
+			e.message.channel.sendMessage("```javascript\n" + reply + " \n```");
 		});
 	});
 	request.on('error', function(err) {
