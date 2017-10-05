@@ -224,5 +224,37 @@ if (cluster.isMaster) {
             });
         }
 
+        if (content.indexOf("$top") === 0) {
+            e.message.channel.sendTyping();
+            var limit = content.replace("$top", "");
+            if(limit > 20)
+            	limit = 20;
+            request('https://api.coinmarketcap.com/v1/ticker/?limit=' + limit, function (error, res, body) {
+		        if (error) {
+		            return collectError(event, {name: 'coinmarketcap'}, error);
+		        }
+		        const response = JSON.parse(body);
+
+		        for(let s of response) {
+		        	e.message.channel.sendMessage("Rank : " + s.rank + " | Name : " + s.name + " | Price : " + s.price_usd + " USD");
+		        }
+		    });
+        }
+
+        if (content.indexOf("$rank") === 0) {
+            e.message.channel.sendTyping();
+            var rank = content.replace("$rank ", "");
+            request('https://api.coinmarketcap.com/v1/ticker/?limit=' + rank, function (error, res, body) {
+		        if (error) {
+		            return collectError(event, {name: 'coinmarketcap'}, error);
+		        }
+		        const response = JSON.parse(body);
+		        if(response[rank-1]) {
+		        	var s = response[rank-1];
+		        	e.message.channel.sendMessage("Name : " + s.name + " | Price : " + s.price_usd + " USD");
+		        }
+		        	
+		    });
+        }
     });
 }
