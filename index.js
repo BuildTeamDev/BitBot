@@ -133,8 +133,6 @@ if (cluster.isMaster) {
         checkCommands(e);
         let coin;
         const content = e.message.content;
-        if (content.indexOf("$new ") === 0) {
-        }
 
         if (content.indexOf("$bts ") === 0) {
             try {
@@ -144,11 +142,11 @@ if (cluster.isMaster) {
                     if (error)
                         return console.log(error);
                     if (object && object.USD) {
-                        e.message.channel.sendMessage("Coin : " + coin + " | Price : " + object.USD.price + " USD");
+                        e.message.channel.sendMessage("```javascript\n Coin : " + coin + " | Price : " + object.USD.price + " USD ```\n");
                     }
                     else(object && object.BTS)
                     {
-                        e.message.channel.sendMessage("Coin : " + coin + " | Price : " + object.BTS.price + " Bitshares");
+                        e.message.channel.sendMessage("```javascript\n Coin : " + coin + " | Price : " + object.BTS.price + " Bitshares ```\n");
                     }
                 });
             }
@@ -158,7 +156,7 @@ if (cluster.isMaster) {
         }
 
         var toUpperCaseContent = content.toUpperCase();
-		var ex = /.*(BT|BUILDTEAM).*/
+		var ex = /.*(BUILDTEAM).*/
 		if(ex.test(toUpperCaseContent) && content.indexOf("$bts ") !== 0) {
 			try{
 				request('https://cryptofresh.com/api/asset/markets?asset=BUILDTEAM', function(error,res,body) {
@@ -166,10 +164,10 @@ if (cluster.isMaster) {
 					if (error) 
 	  					return console.log(error);
 					if(object && object.USD){
-						e.message.reply("Coin : Build Team | Price : " + object.USD.price + " USD");
+						e.message.reply("```javascript\n Coin : Build Team | Price : " + object.USD.price + " USD ```\n");
 					}
 					else if(object && object.BTS){
-						e.message.reply("Coin : Build Team | Price : " + object.BTS.price + " Bitshares");
+						e.message.reply("```javascript\n Coin : Build Team | Price : " + object.BTS.price + " Bitshares ```\n");
 					}
 				});
 			}
@@ -184,10 +182,7 @@ if (cluster.isMaster) {
             steem.api.getDiscussionsByCreated({tag: takeTag, limit: 1}, function (err, result) {
                 if (err)
                     return console.log(err);
-                if (result[0])
-                    e.message.channel.sendMessage("https://steemit.com" + result[0].url);
-                else
-                    e.message.channel.sendMessage("Sorry no such tag in Steemit");
+                forTags(e, result[0]);
             });
         }
 
@@ -197,10 +192,7 @@ if (cluster.isMaster) {
             steem.api.getDiscussionsByHot({tag: takeTag, limit: 1}, function (err, result) {
                 if (err)
                     return console.log(err);
-                if (result[0])
-                    e.message.channel.sendMessage("https://steemit.com" + result[0].url);
-                else
-                    e.message.channel.sendMessage("Sorry no such tag in Steemit");
+                forTags(e, result[0]);
             });
         }
 
@@ -210,10 +202,7 @@ if (cluster.isMaster) {
             steem.api.getDiscussionsByTrending({tag: takeTag, limit: 1}, function (err, result) {
                 if (err)
                     return console.log(err);
-                if (result[0])
-                    e.message.channel.sendMessage("https://steemit.com" + result[0].url);
-                else
-                    e.message.channel.sendMessage("Sorry no such tag in Steemit");
+                forTags(e, result[0]);
             });
         }
 
@@ -254,7 +243,7 @@ if (cluster.isMaster) {
 		        const response = JSON.parse(body);
 		        if(response[rank-1]) {
 		        	var s = response[rank-1];
-		        	e.message.channel.sendMessage("```javascript\n Name : **" + s.name + "** | Price : " + s.price_usd + " USD \n```");
+		        	e.message.channel.sendMessage("```javascript\n Name : " + s.name + " | Price : " + s.price_usd + " USD \n```");
 		        }
 		        	
 		    });
@@ -287,10 +276,21 @@ function getNewCoins(e, limit) {
 				var price = $(this).children('.text-right').children('a.price').text();
 				reply += coinName + ", " + price + " USD \n";
 			});
-			e.message.channel.sendMessage("```javascript\n " + reply + " \n```");
+			e.message.channel.sendMessage("```javascript \n " + reply + " \n```");
 		});
 	});
 	request.on('error', function(err) {
 		return collectError(event, {name: 'coinmarketcap webscraping'}, error);
 	});
+}
+
+function forTags(event, result){
+	if (result) {
+    	var value = "Pending Payout : " + result.pending_payout_value;
+    	value += "\nTotal Votes : " + result.net_votes;
+    	value += "\nhttps://steemit.com" + result.url;
+    	event.message.channel.sendMessage(value);
+    }  
+    else
+        event.message.channel.sendMessage("Sorry no such tag in Steemit");
 }
