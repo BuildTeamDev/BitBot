@@ -120,7 +120,6 @@ if (cluster.isMaster) {
     });
 } else {
     console.log(`Worker ${process.pid} started`);
-
     client.connect({
         token: process.env.DISCORD_TOKEN
     });
