@@ -72,6 +72,28 @@ function getCoinMarketCapScreenshot(event, coin) {
     });
 }
 
+function getBTSCryptoFresh(event, coin) {
+    request('https://cryptofresh.com/api/asset/markets?asset=' + coin.toUpperCase(), function (error, res, body) {
+        try{
+            const object = JSON.parse(body);
+            if(coin.toUpperCase() === 'BUILDTEAM') {
+                coin = 'Build Team';
+            }
+            if (error)
+                return collectError(event, {name: 'cryptofresh'}, error);
+            if (object && object.USD) {
+                event.message.channel.sendMessage("```javascript\nCoin : " + coin + " | Price : " + object.USD.price + " USD ```\n");
+            }
+            else if(object && object.BTS) {
+                event.message.channel.sendMessage("```javascript\nCoin : " + coin + " | Price : " + object.BTS.price + " Bitshares ```\n");
+            }
+        }
+        catch(error) {
+            event.message.channel.sendMessage(`The coin ${coin} is not available, sorry!`);
+        }
+    });
+}
+
 const PRICE_COMMAND = {
     check: function (event) {
         const content = event.message.content;
@@ -90,7 +112,25 @@ const PRICE_COMMAND = {
     name: '$price'
 };
 
-const COMMANDS = [PRICE_COMMAND];
+const BTS_COMMAND = {
+    check: function (event) {
+        const content = event.message.content;
+        return content.indexOf("$bts ") === 0;
+    },
+    apply: function (event) {
+        const content = event.message.content;
+        let coins = content.replace("$bts ", "").replace(",", " ").replace(";", " ").split(' ');
+        event.message.channel.sendTyping();
+        for (let i = 0; i < coins.length; i++) {
+            if(coins[i].length > 1) {
+                getBTSCryptoFresh(event, coins[i]);
+            }
+        }
+    },
+    name: '$bts'
+};
+
+const COMMANDS = [PRICE_COMMAND, BTS_COMMAND];
 
 function checkCommands(event) {
     COMMANDS.filter(function (command) {
@@ -120,6 +160,7 @@ if (cluster.isMaster) {
     });
 } else {
     console.log(`Worker ${process.pid} started`);
+    
     client.connect({
         token: process.env.DISCORD_TOKEN
     });
@@ -133,41 +174,25 @@ if (cluster.isMaster) {
         let coin;
         const content = e.message.content;
 
-        if (content.indexOf("$bts ") === 0) {
-            try {
-                coin = content.replace("$bts ", "");
-                request('https://cryptofresh.com/api/asset/markets?asset=' + coin.toUpperCase(), function (error, res, body) {
-                    const object = JSON.parse(body);
-                    if (error)
-                        return console.log(error);
-                    if (object && object.USD) {
-                        e.message.channel.sendMessage("```javascript\nCoin : " + coin + " | Price : " + object.USD.price + " USD ```\n");
-                    }
-                    else(object && object.BTS)
-                    {
-                        e.message.channel.sendMessage("```javascript\nCoin : " + coin + " | Price : " + object.BTS.price + " Bitshares ```\n");
-                    }
-                });
-            }
-            catch (err) {
-                e.message.channel.sendMessage("Wrong ID, Have a Great Day");
-            }
-        }
-
         var toUpperCaseContent = content.toUpperCase();
 		var ex = /.*(BUILDTEAM).*/
 		if(ex.test(toUpperCaseContent) && content.indexOf("$bts ") !== 0) {
 			try{
 				request('https://cryptofresh.com/api/asset/markets?asset=BUILDTEAM', function(error,res,body) {
-					var object = JSON.parse(body);
-					if (error) 
-	  					return console.log(error);
-					if(object && object.USD){
-						e.message.reply("```javascript\nCoin : Build Team | Price : " + object.USD.price + " USD ```\n");
-					}
-					else if(object && object.BTS){
-						e.message.reply("```javascript\nCoin : Build Team | Price : " + object.BTS.price + " Bitshares ```\n");
-					}
+					try{
+                        var object = JSON.parse(body);
+    					if (error) 
+    	  					return collectError(event, {name: 'cryptofresh'}, error);
+    					if(object && object.USD){
+    						e.message.reply("```javascript\nCoin : Build Team | Price : " + object.USD.price + " USD ```\n");
+    					}
+    					else if(object && object.BTS){
+    						e.message.reply("```javascript\nCoin : Build Team | Price : " + object.BTS.price + " Bitshares ```\n");
+    					}
+                    }
+                    catch(error) {
+                        event.message.channel.sendMessage("The coin Build Team is not available, sorry!");
+                    }
 				});
 			}
 			catch (err) {
@@ -180,7 +205,7 @@ if (cluster.isMaster) {
             var takeTag = content.replace("$created ", "");
             steem.api.getDiscussionsByCreated({tag: takeTag, limit: 1}, function (err, result) {
                 if (err)
-                    return console.log(err);
+                    return collectError(event, {name: 'created'}, err);
                 forTags(e, result[0]);
             });
         }
@@ -190,7 +215,7 @@ if (cluster.isMaster) {
             var takeTag = content.replace("$hot ", "");
             steem.api.getDiscussionsByHot({tag: takeTag, limit: 1}, function (err, result) {
                 if (err)
-                    return console.log(err);
+                    return collectError(event, {name: 'hot'}, err);
                 forTags(e, result[0]);
             });
         }
@@ -200,7 +225,7 @@ if (cluster.isMaster) {
             var takeTag = content.replace("$trending ", "");
             steem.api.getDiscussionsByTrending({tag: takeTag, limit: 1}, function (err, result) {
                 if (err)
-                    return console.log(err);
+                    return collectError(event, {name: 'trending'}, err);
                 forTags(e, result[0]);
             });
         }
@@ -209,7 +234,7 @@ if (cluster.isMaster) {
             e.message.channel.sendTyping();
             steem.api.getAccountCount(function (err, response) {
                 if (err)
-                    return console.log(err);
+                    return collectError(event, {name: 'accounts'}, err);
                 e.message.channel.sendMessage("Total Steemit Accounts : " + response);
             });
         }
@@ -223,12 +248,17 @@ if (cluster.isMaster) {
 		        if (error) {
 		            return collectError(event, {name: 'coinmarketcap'}, error);
 		        }
-		        const response = JSON.parse(body);
-		        var topValue = "";
-		        for(let s of response) {
-		        	topValue += s.rank + ". " + s.name + ", " + s.price_usd + " USD \n";	
-		        }
-		        e.message.channel.sendMessage("```javascript\n" + topValue + "```\n");
+                try{
+                    const response = JSON.parse(body);
+                    var topValue = "";
+                    for(let s of response) {
+                        topValue += s.rank + ". " + s.name + ", " + s.price_usd + " USD \n";    
+                    }
+                    e.message.channel.sendMessage("```javascript\n" + topValue + "```\n");
+                }
+                catch(error) {
+                    event.message.channel.sendMessage("Error fetching the top results,please try again later!");
+                }
 		    });
         }
 
@@ -239,12 +269,16 @@ if (cluster.isMaster) {
 		        if (error) {
 		            return collectError(event, {name: 'coinmarketcap'}, error);
 		        }
-		        const response = JSON.parse(body);
-		        if(response[rank-1]) {
-		        	var s = response[rank-1];
-		        	e.message.channel.sendMessage("```javascript\nName : " + s.name + " | Price : " + s.price_usd + " USD \n```");
-		        }
-		        	
+                try{
+                    const response = JSON.parse(body);
+                    if(response[rank-1]) {
+                        var s = response[rank-1];
+                        e.message.channel.sendMessage("```javascript\nName : " + s.name + " | Price : " + s.price_usd + " USD \n```");
+                    }
+                }
+                catch(error) {
+                    event.message.channel.sendMessage("Error fetching the rank results,please try again later!");
+                }
 		    });
         }
 
