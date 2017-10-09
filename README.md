@@ -1,1 +1,3 @@
 # BitBot
+
+A Discord Bot
