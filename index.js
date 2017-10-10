@@ -58,17 +58,22 @@ function getFallbackCoinMarketCapScreenshot(event, coin) {
 
 function getCoinMarketCapScreenshot(event, coin) {
     request('http://api.coinmarketcap.com/v1/ticker/' + coin + '/', function (error, res, body) {
-        if (error) {
-            return collectError(event, {name: 'coinmarketcap'}, error);
+        try{
+            if (error) {
+                return collectError(event, {name: 'coinmarketcap'}, error);
+            }
+            const response = JSON.parse(body);
+            if (response[0] === undefined) {
+                return getFallbackCoinMarketCapScreenshot(event, coin);
+            }
+            const value = coin.toUpperCase() + " : Current Price " + response[0].price_usd +
+                " | 24 Hour Percentage Change " + response[0].percent_change_24h;
+            event.message.channel.sendMessage(value);
+            getCoinScreenshot(event, coin);
         }
-        const response = JSON.parse(body);
-        if (response[0] === undefined) {
-            return getFallbackCoinMarketCapScreenshot(event, coin);
+        catch(error) {
+            event.message.channel.sendMessage(`The coin ${coin} is not available, sorry!`);
         }
-        const value = coin.toUpperCase() + " : Current Price " + response[0].price_usd +
-            " | 24 Hour Percentage Change " + response[0].percent_change_24h;
-        event.message.channel.sendMessage(value);
-        getCoinScreenshot(event, coin);
     });
 }
 
@@ -90,6 +95,50 @@ function getBTSCryptoFresh(event, coin) {
         }
         catch(error) {
             event.message.channel.sendMessage(`The coin ${coin} is not available, sorry!`);
+        }
+    });
+}
+
+function getFallbackCoinMarketCapConvert(event, coins) {
+    try{
+        for (let i = 0; i < cryptoValues.length; i++) {
+            if (cryptoValues[i].symbol.toUpperCase() === coins[1].toUpperCase()) {
+                coins[1] =  cryptoValues[i].id;
+                return convertCoins(event, coins);
+            }
+            if (cryptoValues[i].id.toUpperCase() === coins[2].toUpperCase()) {
+                coins[2] =  cryptoValues[i].symbol.toLowerCase();
+                return convertCoins(event, coins);
+            }
+        }
+        event.message.channel.sendMessage("These coins conversion not supported");
+    }
+    catch(error) {
+        event.message.channel.sendMessage("These coins conversion not supported");
+    }
+}
+
+function convertCoins(event, coins) {
+    request('http://api.coinmarketcap.com/v1/ticker/' + coins[1] + '/?convert=' + coins[2], function (error, res, body) {
+        try{
+            if (error) {
+                return collectError(event, {name: 'coinmarketcap convert error'}, error);
+            }
+            const response = JSON.parse(body);
+            if (response[0] === undefined) {
+                return getFallbackCoinMarketCapConvert(event, coins);
+            }
+            const totalValue = Number(response[0]["price_" + coins[2]]) * Number(coins[0]);
+            if(response[0]["price_" + coins[2]]){
+                const value = coins[0] + " " + coins[1] + " is equal to " + totalValue + " " + coins[2];
+                event.message.channel.sendMessage("```javascript\n" + value + "\n```");
+            }
+            else
+                return getFallbackCoinMarketCapConvert(event, coins);
+            
+        }
+        catch(error) {
+            event.message.channel.sendMessage("These coins conversion not supported");
         }
     });
 }
@@ -130,7 +179,29 @@ const BTS_COMMAND = {
     name: '$bts'
 };
 
-const COMMANDS = [PRICE_COMMAND, BTS_COMMAND];
+const CONVERT_COMMAND = {
+    check: function (event) {
+        const content = event.message.content;
+        return content.indexOf("$convert ") === 0;
+    },
+    apply: function (event) {
+        const content = event.message.content;
+        let coins = content.replace("$convert ", "").split(' ');
+        event.message.channel.sendTyping();
+        if(coins.length >= 1 && !isNumeric(coins[0])){
+            event.message.reply('Please enter numberic number to convert');
+        }
+        else if(coins.length === 3){
+            convertCoins(event, coins);
+        }
+        else
+            event.message.reply('Please enter correct value to convert');
+        
+    },
+    name: '$convert'
+};
+
+const COMMANDS = [PRICE_COMMAND, BTS_COMMAND, CONVERT_COMMAND];
 
 function checkCommands(event) {
     COMMANDS.filter(function (command) {
@@ -326,4 +397,8 @@ function forTags(event, result){
     }  
     else
         event.message.channel.sendMessage("Sorry no such tag in Steemit");
+}
+
+function isNumeric(n) {
+  return !isNaN(parseFloat(n)) && isFinite(n);
 }
