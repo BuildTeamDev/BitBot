@@ -253,7 +253,7 @@ if (cluster.isMaster) {
 					try{
                         var object = JSON.parse(body);
     					if (error) 
-    	  					return collectError(event, {name: 'cryptofresh'}, error);
+    	  					return collectError(e, {name: 'cryptofresh'}, error);
     					if(object && object.USD){
     						e.message.reply("```javascript\nCoin : Build Team | Price : " + object.USD.price + " USD ```\n");
     					}
@@ -262,7 +262,7 @@ if (cluster.isMaster) {
     					}
                     }
                     catch(error) {
-                        event.message.channel.sendMessage("The coin Build Team is not available, sorry!");
+                        e.message.channel.sendMessage("The coin Build Team is not available, sorry!");
                     }
 				});
 			}
@@ -271,12 +271,17 @@ if (cluster.isMaster) {
 			}
 		}
 
+        /*if (content.indexOf("$help") === 0) {
+            e.message.channel.sendTyping();
+            e.message.reply("```javascript\n ```\n")
+        }*/
+
         if (content.indexOf("$created ") === 0) {
             e.message.channel.sendTyping();
             var takeTag = content.replace("$created ", "");
             steem.api.getDiscussionsByCreated({tag: takeTag, limit: 1}, function (err, result) {
                 if (err)
-                    return collectError(event, {name: 'created'}, err);
+                    return collectError(e, {name: 'created'}, err);
                 forTags(e, result[0]);
             });
         }
@@ -286,7 +291,7 @@ if (cluster.isMaster) {
             var takeTag = content.replace("$hot ", "");
             steem.api.getDiscussionsByHot({tag: takeTag, limit: 1}, function (err, result) {
                 if (err)
-                    return collectError(event, {name: 'hot'}, err);
+                    return collectError(e, {name: 'hot'}, err);
                 forTags(e, result[0]);
             });
         }
@@ -296,7 +301,7 @@ if (cluster.isMaster) {
             var takeTag = content.replace("$trending ", "");
             steem.api.getDiscussionsByTrending({tag: takeTag, limit: 1}, function (err, result) {
                 if (err)
-                    return collectError(event, {name: 'trending'}, err);
+                    return collectError(e, {name: 'trending'}, err);
                 forTags(e, result[0]);
             });
         }
@@ -305,7 +310,7 @@ if (cluster.isMaster) {
             e.message.channel.sendTyping();
             steem.api.getAccountCount(function (err, response) {
                 if (err)
-                    return collectError(event, {name: 'accounts'}, err);
+                    return collectError(e, {name: 'accounts'}, err);
                 e.message.channel.sendMessage("Total Steemit Accounts : " + response);
             });
         }
@@ -317,7 +322,7 @@ if (cluster.isMaster) {
             	limit = 20;
             request('https://api.coinmarketcap.com/v1/ticker/?limit=' + limit, function (error, res, body) {
 		        if (error) {
-		            return collectError(event, {name: 'coinmarketcap'}, error);
+		            return collectError(e, {name: 'coinmarketcap'}, error);
 		        }
                 try{
                     const response = JSON.parse(body);
@@ -328,7 +333,7 @@ if (cluster.isMaster) {
                     e.message.channel.sendMessage("```javascript\n" + topValue + "```\n");
                 }
                 catch(error) {
-                    event.message.channel.sendMessage("Error fetching the top results,please try again later!");
+                    e.message.channel.sendMessage("Error fetching the top results,please try again later!");
                 }
 		    });
         }
@@ -338,7 +343,7 @@ if (cluster.isMaster) {
             var rank = content.replace("$rank ", "");
             request('https://api.coinmarketcap.com/v1/ticker/?limit=' + rank, function (error, res, body) {
 		        if (error) {
-		            return collectError(event, {name: 'coinmarketcap'}, error);
+		            return collectError(e, {name: 'coinmarketcap'}, error);
 		        }
                 try{
                     const response = JSON.parse(body);
@@ -348,7 +353,7 @@ if (cluster.isMaster) {
                     }
                 }
                 catch(error) {
-                    event.message.channel.sendMessage("Error fetching the rank results,please try again later!");
+                    e.message.channel.sendMessage("Error fetching the rank results,please try again later!");
                 }
 		    });
         }
@@ -384,14 +389,16 @@ function getNewCoins(e, limit) {
 		});
 	});
 	request.on('error', function(err) {
-		return collectError(event, {name: 'coinmarketcap webscraping'}, error);
+		return collectError(e, {name: 'coinmarketcap webscraping'}, error);
 	});
 }
 
 function forTags(event, result){
 	if (result) {
+        const d = new Date("yyyy-MM-ddTHH:mm:ss");
     	var value = "Pending Payout : " + result.pending_payout_value;
     	value += "\nTotal Votes : " + result.net_votes;
+        value += "\nPosted Time : " + new Date(result.created).toUTCString();
     	value += "\nhttps://steemit.com" + result.url;
     	event.message.channel.sendMessage(value);
     }  
