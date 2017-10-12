@@ -79,13 +79,10 @@ function getCoinMarketCapScreenshot(event, coin) {
 function getBTSCryptoFresh(event, coin) {
     request('https://cryptofresh.com/api/asset/markets?asset=' + coin.toUpperCase(), function (error, res, body) {
         try {
-            const object = JSON.parse(body);
-            if (coin.toUpperCase() === 'BUILDTEAM') {
-                coin = 'Build Team';
-            }
             if (error) {
                 return collectError(event, {name: 'cryptofresh'}, error);
             }
+            const object = JSON.parse(body);
             if (object && object.USD) {
                 event.message.channel.sendMessage("```javascript\nCoin : " + coin + " | Price : " + object.USD.price + " USD ```\n");
             }
@@ -261,6 +258,7 @@ if (cluster.isMaster) {
     }
     cluster.on('exit', (worker, code, signal) => {
         console.log(`worker ${worker.process.pid} died`);
+        cluster.fork();
     });
 } else {
     console.log(`Worker ${process.pid} started`);
