@@ -205,7 +205,42 @@ const CONVERT_COMMAND = {
     name: '$convert'
 };
 
-const COMMANDS = [PRICE_COMMAND, BTS_COMMAND, CONVERT_COMMAND];
+const BUILDTEAM_COMMAND = {
+    check: function (event) {
+        const content = event.message.content;
+        return content.indexOf("$convert ") === 0;
+    },
+    apply: function (event) {
+        const content = event.message.content;
+        let coins = content.replace("$convert ", "").split(' ');
+        event.message.channel.sendTyping();
+        if (coins.length >= 1 && !isNumeric(coins[0])) {
+            event.message.reply('Please enter a number to convert');
+        }
+        else if (coins.length === 3) {
+            convertCoins(event, coins);
+        }
+        else {
+            event.message.reply('Please enter correct value to convert');
+        }
+
+    },
+    help: "Talk about buildteam and the bot will give some up to date infos on it :)",
+    name: '$buildteam'
+};
+
+const BHELP_COMMAND = {
+    check: function (event) {
+        return false;
+    },
+    apply: function (event) {
+    },
+    help: "Commands available: `$price|$bts|$convert|$buildteam`\nTry typing a command to get detailed help for it.",
+    name: '$help'
+};
+
+
+const COMMANDS = [PRICE_COMMAND, BTS_COMMAND, CONVERT_COMMAND, BUILDTEAM_COMMAND];
 
 function checkCommands(event) {
     COMMANDS.filter(function (command) {
@@ -250,6 +285,9 @@ if (cluster.isMaster) {
     });
 
     client.Dispatcher.on(Events.MESSAGE_CREATE, e => {
+        if (e.message.author.bot) {
+            return;
+        }
         checkCommands(e);
         let coin;
         const content = e.message.content;
