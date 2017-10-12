@@ -182,7 +182,7 @@ function getNewCoins(event, limit) {
                 const price = $(this).children('.text-right').children('a.price').text();
                 reply += coinName + ", " + price + " USD \n";
             });
-            event.message.channel.sendMessage("```javascript\n" + reply + " \n```");
+            event.message.channel.sendMessage("```javascript\n" + reply + "```\n");
         });
     });
     request.on('error', function (err) {
@@ -212,7 +212,7 @@ function getCoinTicker(event, limit, onlyOne) {
 
             for (let s of response) {
                 if (onlyOne) {
-                    if (response[limit - 1]) {
+                    if (parseInt(s.rank) === parseInt(limit)) {
                         topValue += "Name : " + s.name + " | Price : " + s.price_usd + " USD";
                     }
                 } else {
