@@ -140,7 +140,18 @@ function convertCoins(event, coins) {
     });
 }
 
-function forTags(event, result) {
+function printList(event, tag, limit) {
+    steem.api.getDiscussionsByCreated({tag: tag, limit: limit}, function (err, result) {
+        if (err) {
+            return collectError(e, {name: 'printList'}, err);
+        }
+        for (let i = 0; i < result.length; i++) {
+            printTag(event, result[i]);
+        }
+    });
+}
+
+function printTag(event, result) {
     if (!result) {
         return event.message.channel.sendMessage("Sorry no such tag in Steemit");
     }
@@ -259,7 +270,6 @@ const BUILDTEAM_COMMAND = {
 };
 
 
-
 const CREATED_COMMAND = {
     check: function (event) {
         const content = event.message.content;
@@ -271,13 +281,7 @@ const CREATED_COMMAND = {
         const params = content.replace("$created ", "").split(' ');
         const tag = params[0];
         const limit = params.length > 1 ? parseInt(params[1]) : 1;
-        steem.api.getDiscussionsByCreated({tag: tag, limit: limit}, function (err, result) {
-            if (err) {
-                return collectError(e, {name: '$created'}, err);
-            }
-            forTags(event, result[0]);
-        });
-
+        printList(event, tag, limit);
     },
     help: "`$created [tag] (limit=1)`\nf.e.: `$created steem` or `$created life 5`",
     name: '$created'
@@ -352,7 +356,7 @@ if (cluster.isMaster) {
             steem.api.getDiscussionsByHot({tag: takeTag, limit: 1}, function (err, result) {
                 if (err)
                     return collectError(e, {name: 'hot'}, err);
-                forTags(e, result[0]);
+                printTag(e, result[0]);
             });
         }
 
@@ -362,7 +366,7 @@ if (cluster.isMaster) {
             steem.api.getDiscussionsByTrending({tag: takeTag, limit: 1}, function (err, result) {
                 if (err)
                     return collectError(e, {name: 'trending'}, err);
-                forTags(e, result[0]);
+                printTag(e, result[0]);
             });
         }
 
