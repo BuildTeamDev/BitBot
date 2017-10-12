@@ -140,6 +140,49 @@ function convertCoins(event, coins) {
     });
 }
 
+function forTags(event, result) {
+    if (!result) {
+        return event.message.channel.sendMessage("Sorry no such tag in Steemit");
+    }
+    let value = "Pending Payout : " + result.pending_payout_value;
+    value += "\nTotal Votes : " + result.net_votes;
+    value += "\nPosted Time : " + new Date(result.created).toUTCString();
+    value += "\nhttps://steemit.com" + result.url;
+    event.message.channel.sendMessage(value);
+}
+
+
+function getNewCoins(e, limit) {
+    url = 'https://coinmarketcap.com/new/';
+    var request = https.get(url, function (response) {
+        var reply = '';
+        var counter = 0;
+        var json = '';
+        response.on('data', function (chunk) {
+            json += chunk;
+        });
+
+        response.on('end', function () {
+            var $ = cheerio.load(json);
+            $('.table tbody').children().each(function () {
+                if (counter++ === limit)
+                    return false;
+                var coinName = $(this).children('.currency-name').children('a').text();
+                var price = $(this).children('.text-right').children('a.price').text();
+                reply += coinName + ", " + price + " USD \n";
+            });
+            e.message.channel.sendMessage("```javascript\n" + reply + " \n```");
+        });
+    });
+    request.on('error', function (err) {
+        return collectError(e, {name: 'coinmarketcap webscraping'}, error);
+    });
+}
+
+function isNumeric(n) {
+    return !isNaN(parseFloat(n)) && isFinite(n);
+}
+
 const PRICE_COMMAND = {
     check: function (event) {
         const content = event.message.content;
@@ -215,6 +258,31 @@ const BUILDTEAM_COMMAND = {
     name: '$buildteam'
 };
 
+
+
+const CREATED_COMMAND = {
+    check: function (event) {
+        const content = event.message.content;
+        return content.indexOf("$created ") === 0;
+    },
+    apply: function (event) {
+        const content = event.message.content;
+        event.message.channel.sendTyping();
+        const params = content.replace("$created ", "").split(' ');
+        const tag = params[0];
+        const limit = params.length > 1 ? parseInt(params[1]) : 1;
+        steem.api.getDiscussionsByCreated({tag: tag, limit: limit}, function (err, result) {
+            if (err) {
+                return collectError(e, {name: '$created'}, err);
+            }
+            forTags(event, result[0]);
+        });
+
+    },
+    help: "`$created [tag] (limit=1)`\nf.e.: `$created steem` or `$created life 5`",
+    name: '$created'
+};
+
 const HELP_COMMAND = {
     check: function (event) {
         return false;
@@ -226,7 +294,7 @@ const HELP_COMMAND = {
 };
 
 
-const COMMANDS = [PRICE_COMMAND, BTS_COMMAND, CONVERT_COMMAND, BUILDTEAM_COMMAND, HELP_COMMAND];
+const COMMANDS = [PRICE_COMMAND, BTS_COMMAND, CONVERT_COMMAND, BUILDTEAM_COMMAND, HELP_COMMAND, CREATED_COMMAND];
 
 function checkCommands(event) {
     COMMANDS.filter(function (command) {
@@ -277,16 +345,6 @@ if (cluster.isMaster) {
         }
         checkCommands(e);
         const content = e.message.content;
-
-        if (content.indexOf("$created ") === 0) {
-            e.message.channel.sendTyping();
-            var takeTag = content.replace("$created ", "");
-            steem.api.getDiscussionsByCreated({tag: takeTag, limit: 1}, function (err, result) {
-                if (err)
-                    return collectError(e, {name: 'created'}, err);
-                forTags(e, result[0]);
-            });
-        }
 
         if (content.indexOf("$hot ") === 0) {
             e.message.channel.sendTyping();
@@ -366,48 +424,4 @@ if (cluster.isMaster) {
             getNewCoins(e, limit);
         }
     });
-}
-
-function getNewCoins(e, limit) {
-    url = 'https://coinmarketcap.com/new/';
-    var request = https.get(url, function (response) {
-        var reply = '';
-        var counter = 0;
-        var json = '';
-        response.on('data', function (chunk) {
-            json += chunk;
-        });
-
-        response.on('end', function () {
-            var $ = cheerio.load(json);
-            $('.table tbody').children().each(function () {
-                if (counter++ === limit)
-                    return false;
-                var coinName = $(this).children('.currency-name').children('a').text();
-                var price = $(this).children('.text-right').children('a.price').text();
-                reply += coinName + ", " + price + " USD \n";
-            });
-            e.message.channel.sendMessage("```javascript\n" + reply + " \n```");
-        });
-    });
-    request.on('error', function (err) {
-        return collectError(e, {name: 'coinmarketcap webscraping'}, error);
-    });
-}
-
-function forTags(event, result) {
-    if (result) {
-        const d = new Date("yyyy-MM-ddTHH:mm:ss");
-        var value = "Pending Payout : " + result.pending_payout_value;
-        value += "\nTotal Votes : " + result.net_votes;
-        value += "\nPosted Time : " + new Date(result.created).toUTCString();
-        value += "\nhttps://steemit.com" + result.url;
-        event.message.channel.sendMessage(value);
-    }
-    else
-        event.message.channel.sendMessage("Sorry no such tag in Steemit");
-}
-
-function isNumeric(n) {
-    return !isNaN(parseFloat(n)) && isFinite(n);
 }
