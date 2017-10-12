@@ -145,6 +145,9 @@ function printList(event) {
         if (err) {
             return collectError(event, {name: 'printList'}, err);
         }
+        if (!result) {
+            return event.message.channel.sendMessage("Sorry, there were no posts available.");
+        }
         for (let i = 0; i < result.length; i++) {
             printTag(event, result[i]);
         }
@@ -152,9 +155,6 @@ function printList(event) {
 }
 
 function printTag(event, result) {
-    if (!result) {
-        return event.message.channel.sendMessage("Sorry no such tag in Steemit");
-    }
     let value = "Pending Payout : " + result.pending_payout_value;
     value += "\nTotal Votes : " + result.net_votes;
     value += "\nPosted Time : " + new Date(result.created).toUTCString();
@@ -165,21 +165,21 @@ function printTag(event, result) {
 
 function getNewCoins(e, limit) {
     url = 'https://coinmarketcap.com/new/';
-    var request = https.get(url, function (response) {
-        var reply = '';
-        var counter = 0;
-        var json = '';
+    const request = https.get(url, function (response) {
+        let reply = '';
+        let counter = 0;
+        let json = '';
         response.on('data', function (chunk) {
             json += chunk;
         });
 
         response.on('end', function () {
-            var $ = cheerio.load(json);
+            const $ = cheerio.load(json);
             $('.table tbody').children().each(function () {
                 if (counter++ === limit)
                     return false;
-                var coinName = $(this).children('.currency-name').children('a').text();
-                var price = $(this).children('.text-right').children('a.price').text();
+                const coinName = $(this).children('.currency-name').children('a').text();
+                const price = $(this).children('.text-right').children('a.price').text();
                 reply += coinName + ", " + price + " USD \n";
             });
             e.message.channel.sendMessage("```javascript\n" + reply + " \n```");
@@ -406,7 +406,7 @@ if (cluster.isMaster) {
                 }
                 try {
                     const response = JSON.parse(body);
-                    var topValue = "";
+                    let topValue = "";
                     for (let s of response) {
                         topValue += s.rank + ". " + s.name + ", " + s.price_usd + " USD \n";
                     }
@@ -420,7 +420,7 @@ if (cluster.isMaster) {
 
         if (content.indexOf("$rank") === 0) {
             e.message.channel.sendTyping();
-            var rank = content.replace("$rank ", "");
+            const rank = content.replace("$rank ", "");
             request('https://api.coinmarketcap.com/v1/ticker/?limit=' + rank, function (error, res, body) {
                 if (error) {
                     return collectError(e, {name: 'coinmarketcap'}, error);
@@ -428,7 +428,7 @@ if (cluster.isMaster) {
                 try {
                     const response = JSON.parse(body);
                     if (response[rank - 1]) {
-                        var s = response[rank - 1];
+                        const s = response[rank - 1];
                         e.message.channel.sendMessage("```javascript\nName : " + s.name + " | Price : " + s.price_usd + " USD \n```");
                     }
                 }
