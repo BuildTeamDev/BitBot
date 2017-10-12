@@ -13,7 +13,7 @@ const cheerio = require('cheerio');
 
 const options = {
     screenSize: {width: 300, height: 200},
-    renderDelay: 1000,
+    renderDelay: 2000,
     quality: 100,
     defaultWhiteBackground: true,
     shotOffset: {left: 5, right: 5, top: 5, bottom: 5}
@@ -164,7 +164,7 @@ function printTag(event, result) {
 
 
 function getNewCoins(e, limit) {
-    url = 'https://coinmarketcap.com/new/';
+    let url = 'https://coinmarketcap.com/new/';
     const request = https.get(url, function (response) {
         let reply = '';
         let counter = 0;
@@ -321,20 +321,38 @@ const TRENDING_COMMAND = {
     name: '$trending'
 };
 
+const ACCOUNTS_COMMAND = {
+    check: function (event) {
+        const content = event.message.content;
+        return content.indexOf("$accounts") === 0;
+    },
+    apply: function (event) {
+        event.message.channel.sendTyping();
+        steem.api.getAccountCount(function (err, response) {
+            if (err) {
+                return collectError(e, {name: '$accounts'}, err);
+            }
+            event.message.channel.sendMessage("Total Steemit Accounts : " + response);
+        });
+    },
+    help: "`$accounts` returns the current number of steem account",
+    name: '$accounts'
+};
+
 const HELP_COMMAND = {
     check: function (event) {
         return false;
     },
     apply: function (event) {
     },
-    help: "Commands available: `$price|$bts|$convert|$buildteam|$created|$hot|$trending`" +
+    help: "Commands available: `$price|$bts|$convert|$buildteam|$created|$hot|$trending|$accounts`" +
     "\nTry typing a command to get detailed help for it.",
     name: '$help'
 };
 
 
 const COMMANDS = [PRICE_COMMAND, BTS_COMMAND, CONVERT_COMMAND, BUILDTEAM_COMMAND, HELP_COMMAND,
-    CREATED_COMMAND, HOT_COMMAND, TRENDING_COMMAND];
+    CREATED_COMMAND, HOT_COMMAND, TRENDING_COMMAND, ACCOUNTS_COMMAND];
 
 function checkCommands(event) {
     COMMANDS.filter(function (command) {
@@ -385,15 +403,6 @@ if (cluster.isMaster) {
         }
         checkCommands(e);
         const content = e.message.content;
-
-        if (content.indexOf("$accounts") === 0) {
-            e.message.channel.sendTyping();
-            steem.api.getAccountCount(function (err, response) {
-                if (err)
-                    return collectError(e, {name: 'accounts'}, err);
-                e.message.channel.sendMessage("Total Steemit Accounts : " + response);
-            });
-        }
 
         if (content.indexOf("$top") === 0) {
             e.message.channel.sendTyping();
