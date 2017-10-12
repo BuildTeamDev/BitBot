@@ -194,11 +194,34 @@ function isNumeric(n) {
     return !isNaN(parseFloat(n)) && isFinite(n);
 }
 
-const PRICE_COMMAND = {
-    check: function (event) {
+function beginsWith(name) {
+    return function (event) {
         const content = event.message.content;
-        return content.indexOf("$price ") === 0;
-    },
+        return content.indexOf(name) === 0;
+    }
+}
+
+function getCoinTicker(event, limit) {
+    request('https://api.coinmarketcap.com/v1/ticker/?limit=' + limit, function (error, res, body) {
+        if (error) {
+            return collectError(event, {name: 'coinmarketcap'}, error);
+        }
+        try {
+            const response = JSON.parse(body);
+            let topValue = "";
+            for (let s of response) {
+                topValue += s.rank + ". " + s.name + ", " + s.price_usd + " USD \n";
+            }
+            event.message.channel.sendMessage("```javascript\n" + topValue + "```\n");
+        }
+        catch (error) {
+            event.message.channel.sendMessage("Error fetching the top results, please try again later!");
+        }
+    });
+}
+
+const PRICE_COMMAND = {
+    check: beginsWith('$price'),
     apply: function (event) {
         const content = event.message.content;
         let coins = content.replace("$price ", "").replace(",", " ").replace(";", " ").split(' ');
@@ -214,10 +237,7 @@ const PRICE_COMMAND = {
 };
 
 const BTS_COMMAND = {
-    check: function (event) {
-        const content = event.message.content;
-        return content.indexOf("$bts ") === 0;
-    },
+    check: beginsWith('$bts'),
     apply: function (event) {
         const content = event.message.content;
         let coins = content.replace("$bts ", "").replace(",", " ").replace(";", " ").split(' ');
@@ -233,10 +253,7 @@ const BTS_COMMAND = {
 };
 
 const CONVERT_COMMAND = {
-    check: function (event) {
-        const content = event.message.content;
-        return content.indexOf("$convert ") === 0;
-    },
+    check: beginsWith("$convert"),
     apply: function (event) {
         const content = event.message.content;
         let coins = content.replace("$convert ", "").split(' ');
@@ -271,10 +288,7 @@ const BUILDTEAM_COMMAND = {
 
 
 const CREATED_COMMAND = {
-    check: function (event) {
-        const content = event.message.content;
-        return content.indexOf("$created ") === 0;
-    },
+    check: beginsWith("$created"),
     apply: function (event) {
         const content = event.message.content;
         event.message.channel.sendTyping();
@@ -288,10 +302,7 @@ const CREATED_COMMAND = {
 };
 
 const HOT_COMMAND = {
-    check: function (event) {
-        const content = event.message.content;
-        return content.indexOf("$hot ") === 0;
-    },
+    check: beginsWith("$hot"),
     apply: function (event) {
         const content = event.message.content;
         event.message.channel.sendTyping();
@@ -305,10 +316,7 @@ const HOT_COMMAND = {
 };
 
 const TRENDING_COMMAND = {
-    check: function (event) {
-        const content = event.message.content;
-        return content.indexOf("$trending ") === 0;
-    },
+    check: beginsWith("$trending"),
     apply: function (event) {
         const content = event.message.content;
         event.message.channel.sendTyping();
@@ -322,10 +330,7 @@ const TRENDING_COMMAND = {
 };
 
 const ACCOUNTS_COMMAND = {
-    check: function (event) {
-        const content = event.message.content;
-        return content.indexOf("$accounts") === 0;
-    },
+    check: beginsWith("$accounts"),
     apply: function (event) {
         event.message.channel.sendTyping();
         steem.api.getAccountCount(function (err, response) {
@@ -339,20 +344,35 @@ const ACCOUNTS_COMMAND = {
     name: '$accounts'
 };
 
+const TOP_COMMAND = {
+    check: beginsWith("$top"),
+    apply: function (event) {
+        const content = event.message.content;
+        event.message.channel.sendTyping();
+        let limit = parseInt(content.replace("$top", ""));
+        if (limit < 1 || limit > 20) {
+            limit = 20;
+        }
+        getCoinTicker(event, limit)
+    },
+    help: "`$top (limit=20)`\nf.e.: `$top 5``",
+    name: '$top'
+};
+
 const HELP_COMMAND = {
     check: function (event) {
         return false;
     },
     apply: function (event) {
     },
-    help: "Commands available: `$price|$bts|$convert|$buildteam|$created|$hot|$trending|$accounts`" +
+    help: "Commands available: `$price|$bts|$convert|$buildteam|$created|$hot|$trending|$accounts|$top`" +
     "\nTry typing a command to get detailed help for it.",
     name: '$help'
 };
 
 
 const COMMANDS = [PRICE_COMMAND, BTS_COMMAND, CONVERT_COMMAND, BUILDTEAM_COMMAND, HELP_COMMAND,
-    CREATED_COMMAND, HOT_COMMAND, TRENDING_COMMAND, ACCOUNTS_COMMAND];
+    CREATED_COMMAND, HOT_COMMAND, TRENDING_COMMAND, ACCOUNTS_COMMAND, TOP_COMMAND];
 
 function checkCommands(event) {
     COMMANDS.filter(function (command) {
@@ -403,29 +423,6 @@ if (cluster.isMaster) {
         }
         checkCommands(e);
         const content = e.message.content;
-
-        if (content.indexOf("$top") === 0) {
-            e.message.channel.sendTyping();
-            var limit = content.replace("$top", "");
-            if (limit > 20)
-                limit = 20;
-            request('https://api.coinmarketcap.com/v1/ticker/?limit=' + limit, function (error, res, body) {
-                if (error) {
-                    return collectError(e, {name: 'coinmarketcap'}, error);
-                }
-                try {
-                    const response = JSON.parse(body);
-                    let topValue = "";
-                    for (let s of response) {
-                        topValue += s.rank + ". " + s.name + ", " + s.price_usd + " USD \n";
-                    }
-                    e.message.channel.sendMessage("```javascript\n" + topValue + "```\n");
-                }
-                catch (error) {
-                    e.message.channel.sendMessage("Error fetching the top results,please try again later!");
-                }
-            });
-        }
 
         if (content.indexOf("$rank") === 0) {
             e.message.channel.sendTyping();
