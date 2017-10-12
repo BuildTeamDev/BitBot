@@ -163,7 +163,7 @@ function printTag(event, result) {
 }
 
 
-function getNewCoins(e, limit) {
+function getNewCoins(event, limit) {
     let url = 'https://coinmarketcap.com/new/';
     const request = https.get(url, function (response) {
         let reply = '';
@@ -182,11 +182,11 @@ function getNewCoins(e, limit) {
                 const price = $(this).children('.text-right').children('a.price').text();
                 reply += coinName + ", " + price + " USD \n";
             });
-            e.message.channel.sendMessage("```javascript\n" + reply + " \n```");
+            event.message.channel.sendMessage("```javascript\n" + reply + " \n```");
         });
     });
     request.on('error', function (err) {
-        return collectError(e, {name: 'coinmarketcap webscraping'}, error);
+        return collectError(event, {name: 'coinmarketcap webscraping'}, err);
     });
 }
 
@@ -409,7 +409,7 @@ const HELP_COMMAND = {
 
 
 const COMMANDS = [PRICE_COMMAND, BTS_COMMAND, CONVERT_COMMAND, BUILDTEAM_COMMAND, HELP_COMMAND,
-    CREATED_COMMAND, HOT_COMMAND, TRENDING_COMMAND, ACCOUNTS_COMMAND, TOP_COMMAND, RANK_COMMAND];
+    CREATED_COMMAND, HOT_COMMAND, TRENDING_COMMAND, ACCOUNTS_COMMAND, TOP_COMMAND, RANK_COMMAND, NEW_COMMAND];
 
 function checkCommands(event) {
     COMMANDS.filter(function (command) {
@@ -459,12 +459,5 @@ if (cluster.isMaster) {
             return;
         }
         checkCommands(e);
-        const content = e.message.content;
-
-        if (content.indexOf("$new") === 0) {
-            e.message.channel.sendTyping();
-            var limit = parseInt(content.replace("$new", ""));
-            getNewCoins(e, limit);
-        }
     });
 }
