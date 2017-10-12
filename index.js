@@ -140,15 +140,15 @@ function convertCoins(event, coins) {
     });
 }
 
-function printList(event, tag, limit, method) {
-    method({tag: tag, limit: limit}, function (err, result) {
+function printList(event) {
+    return function (err, result) {
         if (err) {
-            return collectError(e, {name: 'printList'}, err);
+            return collectError(event, {name: 'printList'}, err);
         }
         for (let i = 0; i < result.length; i++) {
             printTag(event, result[i]);
         }
-    });
+    };
 }
 
 function printTag(event, result) {
@@ -281,7 +281,7 @@ const CREATED_COMMAND = {
         const params = content.replace("$created ", "").split(' ');
         const tag = params[0];
         const limit = params.length > 1 ? parseInt(params[1]) : 1;
-        printList(event, tag, limit, steem.api.getDiscussionsByCreated);
+        steem.api.getDiscussionsByCreated({tag: tag, limit: limit}, printList(event));
     },
     help: "`$created [tag] (limit=1)`\nf.e.: `$created steem` or `$created life 5`",
     name: '$created'
@@ -298,7 +298,7 @@ const HOT_COMMAND = {
         const params = content.replace("$hot ", "").split(' ');
         const tag = params[0];
         const limit = params.length > 1 ? parseInt(params[1]) : 1;
-        printList(event, tag, limit, steem.api.getDiscussionsByHot);
+        steem.api.getDiscussionsByHot({tag: tag, limit: limit}, printList(event));
     },
     help: "`$hot [tag] (limit=1)`\nf.e.: `$hot steem` or `$hot life 5`",
     name: '$hot'
@@ -315,7 +315,7 @@ const TRENDING_COMMAND = {
         const params = content.replace("$trending ", "").split(' ');
         const tag = params[0];
         const limit = params.length > 1 ? parseInt(params[1]) : 1;
-        printList(event, tag, limit, steem.api.getDiscussionsByTrending);
+        steem.api.getDiscussionsByTrending({tag: tag, limit: limit}, printList(event));
     },
     help: "`$trending [tag] (limit=1)`\nf.e.: `$trending steem` or `$trending life 5`",
     name: '$trending'
