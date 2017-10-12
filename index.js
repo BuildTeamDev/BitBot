@@ -229,7 +229,7 @@ const BUILDTEAM_COMMAND = {
     name: '$buildteam'
 };
 
-const BHELP_COMMAND = {
+const HELP_COMMAND = {
     check: function (event) {
         return false;
     },
@@ -240,7 +240,7 @@ const BHELP_COMMAND = {
 };
 
 
-const COMMANDS = [PRICE_COMMAND, BTS_COMMAND, CONVERT_COMMAND, BUILDTEAM_COMMAND];
+const COMMANDS = [PRICE_COMMAND, BTS_COMMAND, CONVERT_COMMAND, BUILDTEAM_COMMAND, HELP_COMMAND];
 
 function checkCommands(event) {
     COMMANDS.filter(function (command) {
@@ -292,8 +292,8 @@ if (cluster.isMaster) {
         let coin;
         const content = e.message.content;
 
-        var toUpperCaseContent = content.toUpperCase();
-        var ex = /.*(BUILDTEAM).*/
+        const toUpperCaseContent = content.toUpperCase();
+        const ex = /.*(BUILDTEAM).*/;
         if (ex.test(toUpperCaseContent) && content.indexOf("$bts ") !== 0) {
             try {
                 request('https://cryptofresh.com/api/asset/markets?asset=BUILDTEAM', function (error, res, body) {
