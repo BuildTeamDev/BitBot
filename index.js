@@ -205,7 +205,7 @@ const CONVERT_COMMAND = {
     name: '$convert'
 };
 
-const buildteamRegEx = /.*(BUILDTEAM).*/;
+const buildteamRegEx = /.*(\bBUILDTEAM\b|\bBT\b).*/;
 const BUILDTEAM_COMMAND = {
     check: function (event) {
         const content = event.message.content.toUpperCase();
@@ -279,7 +279,7 @@ if (cluster.isMaster) {
         }
         checkCommands(e);
         const content = e.message.content;
-        
+
         if (content.indexOf("$created ") === 0) {
             e.message.channel.sendTyping();
             var takeTag = content.replace("$created ", "");
