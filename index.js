@@ -335,7 +335,7 @@ const ACCOUNTS_COMMAND = {
             event.message.channel.sendMessage("Total Steemit Accounts : " + response);
         });
     },
-    help: "`$accounts` returns the current number of steem account",
+    help: false,
     name: '$accounts'
 };
 
@@ -358,7 +358,7 @@ function checkCommands(event) {
     COMMANDS.filter(function (command) {
         try {
             const content = event.message.content;
-            if (content === command.name) {
+            if (command.help && content === command.name) {
                 event.message.channel.sendMessage(command.help);
                 return false;
             }
