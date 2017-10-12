@@ -201,7 +201,7 @@ function beginsWith(name) {
     }
 }
 
-function getCoinTicker(event, limit) {
+function getCoinTicker(event, limit, onlyOne) {
     request('https://api.coinmarketcap.com/v1/ticker/?limit=' + limit, function (error, res, body) {
         if (error) {
             return collectError(event, {name: 'coinmarketcap'}, error);
@@ -209,13 +209,20 @@ function getCoinTicker(event, limit) {
         try {
             const response = JSON.parse(body);
             let topValue = "";
+
             for (let s of response) {
-                topValue += s.rank + ". " + s.name + ", " + s.price_usd + " USD \n";
+                if (onlyOne) {
+                    if (response[rank - 1]) {
+                        topValue += "Name : " + s.name + " | Price : " + s.price_usd + " USD";
+                    }
+                } else {
+                    topValue += s.rank + ". " + s.name + ", " + s.price_usd + " USD \n";
+                }
             }
             event.message.channel.sendMessage("```javascript\n" + topValue + "```\n");
         }
         catch (error) {
-            event.message.channel.sendMessage("Error fetching the top results, please try again later!");
+            return collectError(event, {name: 'coinmarketcap'}, error);
         }
     });
 }
@@ -350,13 +357,28 @@ const TOP_COMMAND = {
         const content = event.message.content;
         event.message.channel.sendTyping();
         let limit = parseInt(content.replace("$top", ""));
-        if (limit < 1 || limit > 20) {
+        if (limit < 1 || limit > 200) {
             limit = 20;
         }
-        getCoinTicker(event, limit)
+        getCoinTicker(event, limit, false)
     },
     help: "`$top (limit=20)`\nf.e.: `$top 5``",
     name: '$top'
+};
+
+const RANK_COMMAND = {
+    check: beginsWith("$rank"),
+    apply: function (event) {
+        const content = event.message.content;
+        event.message.channel.sendTyping();
+        let rank = parseInt(content.replace("$rank", ""));
+        if (rank < 1 || rank > 1000) {
+            rank = 1;
+        }
+        getCoinTicker(event, rank, true)
+    },
+    help: "`$rank (rank=1)`\nf.e.: `$rank 5``",
+    name: '$rank'
 };
 
 const HELP_COMMAND = {
@@ -365,14 +387,14 @@ const HELP_COMMAND = {
     },
     apply: function (event) {
     },
-    help: "Commands available: `$price|$bts|$convert|$buildteam|$created|$hot|$trending|$accounts|$top`" +
+    help: "Commands available: `$price|$bts|$convert|$buildteam|$created|$hot|$trending|$accounts|$top|$rank`" +
     "\nTry typing a command to get detailed help for it.",
     name: '$help'
 };
 
 
 const COMMANDS = [PRICE_COMMAND, BTS_COMMAND, CONVERT_COMMAND, BUILDTEAM_COMMAND, HELP_COMMAND,
-    CREATED_COMMAND, HOT_COMMAND, TRENDING_COMMAND, ACCOUNTS_COMMAND, TOP_COMMAND];
+    CREATED_COMMAND, HOT_COMMAND, TRENDING_COMMAND, ACCOUNTS_COMMAND, TOP_COMMAND, RANK_COMMAND];
 
 function checkCommands(event) {
     COMMANDS.filter(function (command) {
@@ -423,26 +445,6 @@ if (cluster.isMaster) {
         }
         checkCommands(e);
         const content = e.message.content;
-
-        if (content.indexOf("$rank") === 0) {
-            e.message.channel.sendTyping();
-            const rank = content.replace("$rank ", "");
-            request('https://api.coinmarketcap.com/v1/ticker/?limit=' + rank, function (error, res, body) {
-                if (error) {
-                    return collectError(e, {name: 'coinmarketcap'}, error);
-                }
-                try {
-                    const response = JSON.parse(body);
-                    if (response[rank - 1]) {
-                        const s = response[rank - 1];
-                        e.message.channel.sendMessage("```javascript\nName : " + s.name + " | Price : " + s.price_usd + " USD \n```");
-                    }
-                }
-                catch (error) {
-                    e.message.channel.sendMessage("Error fetching the rank results,please try again later!");
-                }
-            });
-        }
 
         if (content.indexOf("$new") === 0) {
             e.message.channel.sendTyping();
