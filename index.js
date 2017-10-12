@@ -145,7 +145,7 @@ function printList(event) {
         if (err) {
             return collectError(event, {name: 'printList'}, err);
         }
-        if (!result) {
+        if (result.length <= 0) {
             return event.message.channel.sendMessage("Sorry, there were no posts available.");
         }
         for (let i = 0; i < result.length; i++) {
