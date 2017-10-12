@@ -205,25 +205,14 @@ const CONVERT_COMMAND = {
     name: '$convert'
 };
 
+const buildteamRegEx = /.*(BUILDTEAM).*/;
 const BUILDTEAM_COMMAND = {
     check: function (event) {
-        const content = event.message.content;
-        return content.indexOf("$convert ") === 0;
+        const content = event.message.content.toUpperCase();
+        return buildteamRegEx.test(content);
     },
     apply: function (event) {
-        const content = event.message.content;
-        let coins = content.replace("$convert ", "").split(' ');
-        event.message.channel.sendTyping();
-        if (coins.length >= 1 && !isNumeric(coins[0])) {
-            event.message.reply('Please enter a number to convert');
-        }
-        else if (coins.length === 3) {
-            convertCoins(event, coins);
-        }
-        else {
-            event.message.reply('Please enter correct value to convert');
-        }
-
+        getBTSCryptoFresh(event, 'buildteam');
     },
     help: "Talk about buildteam and the bot will give some up to date infos on it :)",
     name: '$buildteam'
@@ -289,40 +278,8 @@ if (cluster.isMaster) {
             return;
         }
         checkCommands(e);
-        let coin;
         const content = e.message.content;
-
-        const toUpperCaseContent = content.toUpperCase();
-        const ex = /.*(BUILDTEAM).*/;
-        if (ex.test(toUpperCaseContent) && content.indexOf("$bts ") !== 0) {
-            try {
-                request('https://cryptofresh.com/api/asset/markets?asset=BUILDTEAM', function (error, res, body) {
-                    try {
-                        var object = JSON.parse(body);
-                        if (error)
-                            return collectError(e, {name: 'cryptofresh'}, error);
-                        if (object && object.USD) {
-                            e.message.reply("```javascript\nCoin : Build Team | Price : " + object.USD.price + " USD ```\n");
-                        }
-                        else if (object && object.BTS) {
-                            e.message.reply("```javascript\nCoin : Build Team | Price : " + object.BTS.price + " Bitshares ```\n");
-                        }
-                    }
-                    catch (error) {
-                        e.message.channel.sendMessage("The coin Build Team is not available, sorry!");
-                    }
-                });
-            }
-            catch (err) {
-                e.message.channel.sendMessage("Wrong ID, Have a Great Day");
-            }
-        }
-
-        /*if (content.indexOf("$help") === 0) {
-         e.message.channel.sendTyping();
-         e.message.reply("```javascript\n ```\n")
-         }*/
-
+        
         if (content.indexOf("$created ") === 0) {
             e.message.channel.sendTyping();
             var takeTag = content.replace("$created ", "");
