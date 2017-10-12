@@ -140,8 +140,8 @@ function convertCoins(event, coins) {
     });
 }
 
-function printList(event, tag, limit) {
-    steem.api.getDiscussionsByCreated({tag: tag, limit: limit}, function (err, result) {
+function printList(event, tag, limit, method) {
+    method({tag: tag, limit: limit}, function (err, result) {
         if (err) {
             return collectError(e, {name: 'printList'}, err);
         }
@@ -281,10 +281,44 @@ const CREATED_COMMAND = {
         const params = content.replace("$created ", "").split(' ');
         const tag = params[0];
         const limit = params.length > 1 ? parseInt(params[1]) : 1;
-        printList(event, tag, limit);
+        printList(event, tag, limit, steem.api.getDiscussionsByCreated);
     },
     help: "`$created [tag] (limit=1)`\nf.e.: `$created steem` or `$created life 5`",
     name: '$created'
+};
+
+const HOT_COMMAND = {
+    check: function (event) {
+        const content = event.message.content;
+        return content.indexOf("$hot ") === 0;
+    },
+    apply: function (event) {
+        const content = event.message.content;
+        event.message.channel.sendTyping();
+        const params = content.replace("$hot ", "").split(' ');
+        const tag = params[0];
+        const limit = params.length > 1 ? parseInt(params[1]) : 1;
+        printList(event, tag, limit, steem.api.getDiscussionsByHot);
+    },
+    help: "`$hot [tag] (limit=1)`\nf.e.: `$hot steem` or `$hot life 5`",
+    name: '$hot'
+};
+
+const TRENDING_COMMAND = {
+    check: function (event) {
+        const content = event.message.content;
+        return content.indexOf("$trending ") === 0;
+    },
+    apply: function (event) {
+        const content = event.message.content;
+        event.message.channel.sendTyping();
+        const params = content.replace("$trending ", "").split(' ');
+        const tag = params[0];
+        const limit = params.length > 1 ? parseInt(params[1]) : 1;
+        printList(event, tag, limit, steem.api.getDiscussionsByTrending);
+    },
+    help: "`$trending [tag] (limit=1)`\nf.e.: `$trending steem` or `$trending life 5`",
+    name: '$trending'
 };
 
 const HELP_COMMAND = {
@@ -293,12 +327,14 @@ const HELP_COMMAND = {
     },
     apply: function (event) {
     },
-    help: "Commands available: `$price|$bts|$convert|$buildteam`\nTry typing a command to get detailed help for it.",
+    help: "Commands available: `$price|$bts|$convert|$buildteam|$created|$hot|$trending`" +
+    "\nTry typing a command to get detailed help for it.",
     name: '$help'
 };
 
 
-const COMMANDS = [PRICE_COMMAND, BTS_COMMAND, CONVERT_COMMAND, BUILDTEAM_COMMAND, HELP_COMMAND, CREATED_COMMAND];
+const COMMANDS = [PRICE_COMMAND, BTS_COMMAND, CONVERT_COMMAND, BUILDTEAM_COMMAND, HELP_COMMAND,
+    CREATED_COMMAND, HOT_COMMAND, TRENDING_COMMAND];
 
 function checkCommands(event) {
     COMMANDS.filter(function (command) {
@@ -349,26 +385,6 @@ if (cluster.isMaster) {
         }
         checkCommands(e);
         const content = e.message.content;
-
-        if (content.indexOf("$hot ") === 0) {
-            e.message.channel.sendTyping();
-            var takeTag = content.replace("$hot ", "");
-            steem.api.getDiscussionsByHot({tag: takeTag, limit: 1}, function (err, result) {
-                if (err)
-                    return collectError(e, {name: 'hot'}, err);
-                printTag(e, result[0]);
-            });
-        }
-
-        if (content.indexOf("$trending ") === 0) {
-            e.message.channel.sendTyping();
-            var takeTag = content.replace("$trending ", "");
-            steem.api.getDiscussionsByTrending({tag: takeTag, limit: 1}, function (err, result) {
-                if (err)
-                    return collectError(e, {name: 'trending'}, err);
-                printTag(e, result[0]);
-            });
-        }
 
         if (content.indexOf("$accounts") === 0) {
             e.message.channel.sendTyping();
