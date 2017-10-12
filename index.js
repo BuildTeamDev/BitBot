@@ -212,7 +212,7 @@ function getCoinTicker(event, limit, onlyOne) {
 
             for (let s of response) {
                 if (onlyOne) {
-                    if (response[rank - 1]) {
+                    if (response[limit - 1]) {
                         topValue += "Name : " + s.name + " | Price : " + s.price_usd + " USD";
                     }
                 } else {
@@ -360,7 +360,7 @@ const TOP_COMMAND = {
         if (limit < 1 || limit > 200) {
             limit = 20;
         }
-        getCoinTicker(event, limit, false)
+        getCoinTicker(event, limit, false);
     },
     help: "`$top (limit=20)`\nf.e.: `$top 5``",
     name: '$top'
@@ -375,10 +375,25 @@ const RANK_COMMAND = {
         if (rank < 1 || rank > 1000) {
             rank = 1;
         }
-        getCoinTicker(event, rank, true)
+        getCoinTicker(event, rank, true);
     },
     help: "`$rank (rank=1)`\nf.e.: `$rank 5``",
     name: '$rank'
+};
+
+const NEW_COMMAND = {
+    check: beginsWith("$new"),
+    apply: function (event) {
+        const content = event.message.content;
+        event.message.channel.sendTyping();
+        let limit = parseInt(content.replace("$new", ""));
+        if (limit < 1 || limit > 200) {
+            limit = 20;
+        }
+        getNewCoins(event, limit);
+    },
+    help: "`$new (limit=1)`\nf.e.: `$new 5``",
+    name: '$new'
 };
 
 const HELP_COMMAND = {
@@ -387,7 +402,7 @@ const HELP_COMMAND = {
     },
     apply: function (event) {
     },
-    help: "Commands available: `$price|$bts|$convert|$buildteam|$created|$hot|$trending|$accounts|$top|$rank`" +
+    help: "Commands available: `$price|$bts|$convert|$buildteam|$created|$hot|$trending|$accounts|$top|$rank|$new`" +
     "\nTry typing a command to get detailed help for it.",
     name: '$help'
 };
