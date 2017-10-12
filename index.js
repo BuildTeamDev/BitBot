@@ -1,7 +1,6 @@
 const cluster = require('cluster');
 const http = require('http');
 const https = require('https');
-const numCPUs = require('os').cpus().length;
 const request = require('request');
 const Discordie = require('discordie');
 const Events = Discordie.Events;
@@ -10,7 +9,7 @@ const fs = require('fs');
 const steem = require('steem');
 const cryptoValues = require("./crypto.json");
 const client = new Discordie();
-var cheerio = require('cheerio');
+const cheerio = require('cheerio');
 
 const options = {
     screenSize: {width: 300, height: 200},
@@ -58,7 +57,7 @@ function getFallbackCoinMarketCapScreenshot(event, coin) {
 
 function getCoinMarketCapScreenshot(event, coin) {
     request('http://api.coinmarketcap.com/v1/ticker/' + coin + '/', function (error, res, body) {
-        try{
+        try {
             if (error) {
                 return collectError(event, {name: 'coinmarketcap'}, error);
             }
@@ -71,7 +70,7 @@ function getCoinMarketCapScreenshot(event, coin) {
             event.message.channel.sendMessage(value);
             getCoinScreenshot(event, coin);
         }
-        catch(error) {
+        catch (error) {
             event.message.channel.sendMessage(`The coin ${coin} is not available, sorry!`);
         }
     });
@@ -79,48 +78,49 @@ function getCoinMarketCapScreenshot(event, coin) {
 
 function getBTSCryptoFresh(event, coin) {
     request('https://cryptofresh.com/api/asset/markets?asset=' + coin.toUpperCase(), function (error, res, body) {
-        try{
+        try {
             const object = JSON.parse(body);
-            if(coin.toUpperCase() === 'BUILDTEAM') {
+            if (coin.toUpperCase() === 'BUILDTEAM') {
                 coin = 'Build Team';
             }
-            if (error)
+            if (error) {
                 return collectError(event, {name: 'cryptofresh'}, error);
+            }
             if (object && object.USD) {
                 event.message.channel.sendMessage("```javascript\nCoin : " + coin + " | Price : " + object.USD.price + " USD ```\n");
             }
-            else if(object && object.BTS) {
+            if (object && object.BTS) {
                 event.message.channel.sendMessage("```javascript\nCoin : " + coin + " | Price : " + object.BTS.price + " Bitshares ```\n");
             }
         }
-        catch(error) {
+        catch (error) {
             event.message.channel.sendMessage(`The coin ${coin} is not available, sorry!`);
         }
     });
 }
 
 function getFallbackCoinMarketCapConvert(event, coins) {
-    try{
+    try {
         for (let i = 0; i < cryptoValues.length; i++) {
             if (cryptoValues[i].symbol.toUpperCase() === coins[1].toUpperCase()) {
-                coins[1] =  cryptoValues[i].id;
+                coins[1] = cryptoValues[i].id;
                 return convertCoins(event, coins);
             }
             if (cryptoValues[i].id.toUpperCase() === coins[2].toUpperCase()) {
-                coins[2] =  cryptoValues[i].symbol.toLowerCase();
+                coins[2] = cryptoValues[i].symbol.toLowerCase();
                 return convertCoins(event, coins);
             }
         }
         event.message.channel.sendMessage("These coins conversion not supported");
     }
-    catch(error) {
+    catch (error) {
         event.message.channel.sendMessage("These coins conversion not supported");
     }
 }
 
 function convertCoins(event, coins) {
     request('http://api.coinmarketcap.com/v1/ticker/' + coins[1] + '/?convert=' + coins[2], function (error, res, body) {
-        try{
+        try {
             if (error) {
                 return collectError(event, {name: 'coinmarketcap convert error'}, error);
             }
@@ -129,15 +129,15 @@ function convertCoins(event, coins) {
                 return getFallbackCoinMarketCapConvert(event, coins);
             }
             const totalValue = Number(response[0]["price_" + coins[2]]) * Number(coins[0]);
-            if(response[0]["price_" + coins[2]]){
+            if (response[0]["price_" + coins[2]]) {
                 const value = coins[0] + " " + coins[1] + " is equal to " + totalValue + " " + coins[2];
                 event.message.channel.sendMessage("```javascript\n" + value + "\n```");
             }
             else
                 return getFallbackCoinMarketCapConvert(event, coins);
-            
+
         }
-        catch(error) {
+        catch (error) {
             event.message.channel.sendMessage("These coins conversion not supported");
         }
     });
@@ -153,11 +153,12 @@ const PRICE_COMMAND = {
         let coins = content.replace("$price ", "").replace(",", " ").replace(";", " ").split(' ');
         event.message.channel.sendTyping();
         for (let i = 0; i < coins.length; i++) {
-            if(coins[i].length > 1) {
+            if (coins[i].length > 1) {
                 getCoinMarketCapScreenshot(event, coins[i]);
             }
         }
     },
+    help: "`$price [coin]`\nf.e.: `$price steem`",
     name: '$price'
 };
 
@@ -171,11 +172,12 @@ const BTS_COMMAND = {
         let coins = content.replace("$bts ", "").replace(",", " ").replace(";", " ").split(' ');
         event.message.channel.sendTyping();
         for (let i = 0; i < coins.length; i++) {
-            if(coins[i].length > 1) {
+            if (coins[i].length > 1) {
                 getBTSCryptoFresh(event, coins[i]);
             }
         }
     },
+    help: "`$bts [token]`\nf.e.: `$bts buildteam`",
     name: '$bts'
 };
 
@@ -188,16 +190,18 @@ const CONVERT_COMMAND = {
         const content = event.message.content;
         let coins = content.replace("$convert ", "").split(' ');
         event.message.channel.sendTyping();
-        if(coins.length >= 1 && !isNumeric(coins[0])){
-            event.message.reply('Please enter numberic number to convert');
+        if (coins.length >= 1 && !isNumeric(coins[0])) {
+            event.message.reply('Please enter a number to convert');
         }
-        else if(coins.length === 3){
+        else if (coins.length === 3) {
             convertCoins(event, coins);
         }
-        else
+        else {
             event.message.reply('Please enter correct value to convert');
-        
+        }
+
     },
+    help: "`$convert [amount] [from-coin] [to-coin]`\nf.e.: `$convert 3 steem bts`",
     name: '$convert'
 };
 
@@ -206,6 +210,11 @@ const COMMANDS = [PRICE_COMMAND, BTS_COMMAND, CONVERT_COMMAND];
 function checkCommands(event) {
     COMMANDS.filter(function (command) {
         try {
+            const content = event.message.content;
+            if (content === command.name) {
+                event.message.channel.sendMessage(command.help);
+                return false;
+            }
             return command.check(event);
         } catch (err) {
             collectError(event, command, err);
@@ -231,7 +240,7 @@ if (cluster.isMaster) {
     });
 } else {
     console.log(`Worker ${process.pid} started`);
-    
+
     client.connect({
         token: process.env.DISCORD_TOKEN
     });
@@ -246,35 +255,35 @@ if (cluster.isMaster) {
         const content = e.message.content;
 
         var toUpperCaseContent = content.toUpperCase();
-		var ex = /.*(BUILDTEAM).*/
-		if(ex.test(toUpperCaseContent) && content.indexOf("$bts ") !== 0) {
-			try{
-				request('https://cryptofresh.com/api/asset/markets?asset=BUILDTEAM', function(error,res,body) {
-					try{
+        var ex = /.*(BUILDTEAM).*/
+        if (ex.test(toUpperCaseContent) && content.indexOf("$bts ") !== 0) {
+            try {
+                request('https://cryptofresh.com/api/asset/markets?asset=BUILDTEAM', function (error, res, body) {
+                    try {
                         var object = JSON.parse(body);
-    					if (error) 
-    	  					return collectError(e, {name: 'cryptofresh'}, error);
-    					if(object && object.USD){
-    						e.message.reply("```javascript\nCoin : Build Team | Price : " + object.USD.price + " USD ```\n");
-    					}
-    					else if(object && object.BTS){
-    						e.message.reply("```javascript\nCoin : Build Team | Price : " + object.BTS.price + " Bitshares ```\n");
-    					}
+                        if (error)
+                            return collectError(e, {name: 'cryptofresh'}, error);
+                        if (object && object.USD) {
+                            e.message.reply("```javascript\nCoin : Build Team | Price : " + object.USD.price + " USD ```\n");
+                        }
+                        else if (object && object.BTS) {
+                            e.message.reply("```javascript\nCoin : Build Team | Price : " + object.BTS.price + " Bitshares ```\n");
+                        }
                     }
-                    catch(error) {
+                    catch (error) {
                         e.message.channel.sendMessage("The coin Build Team is not available, sorry!");
                     }
-				});
-			}
-			catch (err) {
-				e.message.channel.sendMessage("Wrong ID, Have a Great Day");
-			}
-		}
+                });
+            }
+            catch (err) {
+                e.message.channel.sendMessage("Wrong ID, Have a Great Day");
+            }
+        }
 
         /*if (content.indexOf("$help") === 0) {
-            e.message.channel.sendTyping();
-            e.message.reply("```javascript\n ```\n")
-        }*/
+         e.message.channel.sendTyping();
+         e.message.reply("```javascript\n ```\n")
+         }*/
 
         if (content.indexOf("$created ") === 0) {
             e.message.channel.sendTyping();
@@ -318,44 +327,44 @@ if (cluster.isMaster) {
         if (content.indexOf("$top") === 0) {
             e.message.channel.sendTyping();
             var limit = content.replace("$top", "");
-            if(limit > 20)
-            	limit = 20;
+            if (limit > 20)
+                limit = 20;
             request('https://api.coinmarketcap.com/v1/ticker/?limit=' + limit, function (error, res, body) {
-		        if (error) {
-		            return collectError(e, {name: 'coinmarketcap'}, error);
-		        }
-                try{
+                if (error) {
+                    return collectError(e, {name: 'coinmarketcap'}, error);
+                }
+                try {
                     const response = JSON.parse(body);
                     var topValue = "";
-                    for(let s of response) {
-                        topValue += s.rank + ". " + s.name + ", " + s.price_usd + " USD \n";    
+                    for (let s of response) {
+                        topValue += s.rank + ". " + s.name + ", " + s.price_usd + " USD \n";
                     }
                     e.message.channel.sendMessage("```javascript\n" + topValue + "```\n");
                 }
-                catch(error) {
+                catch (error) {
                     e.message.channel.sendMessage("Error fetching the top results,please try again later!");
                 }
-		    });
+            });
         }
 
         if (content.indexOf("$rank") === 0) {
             e.message.channel.sendTyping();
             var rank = content.replace("$rank ", "");
             request('https://api.coinmarketcap.com/v1/ticker/?limit=' + rank, function (error, res, body) {
-		        if (error) {
-		            return collectError(e, {name: 'coinmarketcap'}, error);
-		        }
-                try{
+                if (error) {
+                    return collectError(e, {name: 'coinmarketcap'}, error);
+                }
+                try {
                     const response = JSON.parse(body);
-                    if(response[rank-1]) {
-                        var s = response[rank-1];
+                    if (response[rank - 1]) {
+                        var s = response[rank - 1];
                         e.message.channel.sendMessage("```javascript\nName : " + s.name + " | Price : " + s.price_usd + " USD \n```");
                     }
                 }
-                catch(error) {
+                catch (error) {
                     e.message.channel.sendMessage("Error fetching the rank results,please try again later!");
                 }
-		    });
+            });
         }
 
         if (content.indexOf("$new") === 0) {
@@ -367,45 +376,45 @@ if (cluster.isMaster) {
 }
 
 function getNewCoins(e, limit) {
-	url = 'https://coinmarketcap.com/new/';
-	var request = https.get(url, function(response) {
-		var reply = '';
-		var counter = 0;
-		var json = '';
-		response.on('data', function(chunk) {
-			json += chunk;
-		});
+    url = 'https://coinmarketcap.com/new/';
+    var request = https.get(url, function (response) {
+        var reply = '';
+        var counter = 0;
+        var json = '';
+        response.on('data', function (chunk) {
+            json += chunk;
+        });
 
-		response.on('end', function() {
-			var $ = cheerio.load(json);
-			$('.table tbody').children().each(function() {
-				if(counter++ === limit)
-					return false;
-				var coinName = $(this).children('.currency-name').children('a').text();
-				var price = $(this).children('.text-right').children('a.price').text();
-				reply += coinName + ", " + price + " USD \n";
-			});
-			e.message.channel.sendMessage("```javascript\n" + reply + " \n```");
-		});
-	});
-	request.on('error', function(err) {
-		return collectError(e, {name: 'coinmarketcap webscraping'}, error);
-	});
+        response.on('end', function () {
+            var $ = cheerio.load(json);
+            $('.table tbody').children().each(function () {
+                if (counter++ === limit)
+                    return false;
+                var coinName = $(this).children('.currency-name').children('a').text();
+                var price = $(this).children('.text-right').children('a.price').text();
+                reply += coinName + ", " + price + " USD \n";
+            });
+            e.message.channel.sendMessage("```javascript\n" + reply + " \n```");
+        });
+    });
+    request.on('error', function (err) {
+        return collectError(e, {name: 'coinmarketcap webscraping'}, error);
+    });
 }
 
-function forTags(event, result){
-	if (result) {
+function forTags(event, result) {
+    if (result) {
         const d = new Date("yyyy-MM-ddTHH:mm:ss");
-    	var value = "Pending Payout : " + result.pending_payout_value;
-    	value += "\nTotal Votes : " + result.net_votes;
+        var value = "Pending Payout : " + result.pending_payout_value;
+        value += "\nTotal Votes : " + result.net_votes;
         value += "\nPosted Time : " + new Date(result.created).toUTCString();
-    	value += "\nhttps://steemit.com" + result.url;
-    	event.message.channel.sendMessage(value);
-    }  
+        value += "\nhttps://steemit.com" + result.url;
+        event.message.channel.sendMessage(value);
+    }
     else
         event.message.channel.sendMessage("Sorry no such tag in Steemit");
 }
 
 function isNumeric(n) {
-  return !isNaN(parseFloat(n)) && isFinite(n);
+    return !isNaN(parseFloat(n)) && isFinite(n);
 }
