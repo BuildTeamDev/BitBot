@@ -402,8 +402,19 @@ const HELP_COMMAND = {
     },
     apply: function (event) {
     },
-    help: "Commands available: `$price|$bts|$convert|$buildteam|$created|$hot|$trending|$accounts|$top|$rank|$new`" +
-    "\nTry typing a command to get detailed help for it.",
+    help: "\n **Commands**" +
+            "\n ***$price*** - `Shows price of a coin from CoinMarketCap`" +
+            "\n ***$bts*** - `Shows price of all the bitshare coin`" +
+            "\n ***$convert*** - `Convert your crypto coins`" +
+            "\n ***$buildteam*** - `Gets instant detail about the buildteam coin`" +
+            "\n ***$created*** - `Get latest post of certain tag from Steemit`" +
+            "\n ***$hot*** - `Get hot post of certain tag from Steemit`" +
+            "\n ***$trending*** - `Get trending post of certain tag from Steemit`" +
+            "\n ***$accounts*** - `Get total accounts in Steemit`" +
+            "\n ***$top*** - `Get top crypto coins`" +
+            "\n ***$rank*** - `Get the rank of your favorite crypto coin`" +
+            "\n ***$new*** - `Get the details of latest coins added`" +
+    "\n*Try typing a command to get detailed help for it.* \n",
     name: '$help'
 };
 
