@@ -10,6 +10,7 @@ const steem = require('steem');
 const cryptoValues = require("./crypto.json");
 const client = new Discordie();
 const cheerio = require('cheerio');
+const time_ago = require('time_ago_in_words');
 
 const options = {
     screenSize: {width: 300, height: 200},
@@ -157,7 +158,7 @@ function printList(event) {
 function printTag(event, result) {
     let value = "Pending Payout : " + result.pending_payout_value;
     value += "\nTotal Votes : " + result.net_votes;
-    value += "\nPosted Time : " + new Date(result.created).toUTCString();
+    value += "\nPosted Time : " + time_ago(new Date(result.created) - (1000 * 60));
     value += "\nhttps://steemit.com" + result.url;
     event.message.channel.sendMessage(value);
 }
@@ -414,13 +415,36 @@ const HELP_COMMAND = {
             "\n ***$top*** - `Get top crypto coins`" +
             "\n ***$rank*** - `Get the rank of your favorite crypto coin`" +
             "\n ***$new*** - `Get the details of latest coins added`" +
+            "\n ***$vp*** - `Get the user's Voting Power`" +
     "\n*Try typing a command to get detailed help for it.* \n",
     name: '$help'
 };
 
+const VP_COMMAND = {
+    check: beginsWith("$vp"),
+    apply: function (event) {
+        const content = event.message.content;
+        event.message.channel.sendTyping();
+        const params = content.replace("$vp ", "");
+        steem.api.getAccounts([params], function(err, result) {
+            if (err) {
+                return collectError(event, {name: 'vp command'}, err);
+            }
+            if (result.length <= 0) {
+                return event.message.channel.sendMessage("Sorry, there is no such account in steemit");
+            }
+            var votingPower = parseInt(result[0].voting_power) / 100;
+            event.message.channel.sendMessage("```\nVoting Power of " + params + " is " + votingPower + "\n```");
+        });
+    },
+    help: "`$vp (limit=1)`\nf.e.: `$vp codingdefined``",
+    name: '$vp'
+}
+
 
 const COMMANDS = [PRICE_COMMAND, BTS_COMMAND, CONVERT_COMMAND, BUILDTEAM_COMMAND, HELP_COMMAND,
-    CREATED_COMMAND, HOT_COMMAND, TRENDING_COMMAND, ACCOUNTS_COMMAND, TOP_COMMAND, RANK_COMMAND, NEW_COMMAND];
+    CREATED_COMMAND, HOT_COMMAND, TRENDING_COMMAND, ACCOUNTS_COMMAND, TOP_COMMAND, RANK_COMMAND, 
+    NEW_COMMAND, VP_COMMAND];
 
 function checkCommands(event) {
     COMMANDS.filter(function (command) {
