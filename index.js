@@ -156,39 +156,44 @@ function printList(event) {
 }
 
 function printTag(event, result) {
-    let value = "Pending Payout : " + result.pending_payout_value;
-    value += "\nTotal Votes : " + result.net_votes;
-    value += "\nPosted Time : " + time_ago(new Date(result.created) - (1000 * 60));
-    value += "\nhttps://steemit.com" + result.url;
-    event.message.channel.sendMessage(value);
-}
+        let value = "Pending Payout : " + result.pending_payout_value;
+        value += "\nTotal Votes : " + result.net_votes;
+        value += "\nPosted Time : " + time_ago(new Date(result.created) - (1000 * 60));
+        value += "\nhttps://steemit.com" + result.url;
+        event.message.channel.sendMessage(value);
+    }
 
 
 function getNewCoins(event, limit) {
-    let url = 'https://coinmarketcap.com/new/';
-    const request = https.get(url, function (response) {
-        let reply = '';
-        let counter = 0;
-        let json = '';
-        response.on('data', function (chunk) {
-            json += chunk;
-        });
-
-        response.on('end', function () {
-            const $ = cheerio.load(json);
-            $('.table tbody').children().each(function () {
-                if (counter++ === limit)
-                    return false;
-                const coinName = $(this).children('.currency-name').children('a').text();
-                const price = $(this).children('.text-right').children('a.price').text();
-                reply += coinName + ", " + price + " USD \n";
+    try{
+        let url = 'https://coinmarketcap.com/new/';
+        const request = https.get(url, function (response) {
+            let reply = '';
+            let counter = 0;
+            let json = '';
+            response.on('data', function (chunk) {
+                json += chunk;
             });
-            event.message.channel.sendMessage("```javascript\n" + reply + "```\n");
+
+            response.on('end', function () {
+                const $ = cheerio.load(json);
+                $('.table tbody').children().each(function () {
+                    if (counter++ === limit)
+                        return false;
+                    const coinName = $(this).children('.currency-name').children('a').text();
+                    const price = $(this).children('.text-right').children('a.price').text();
+                    reply += coinName + ", " + price + " USD \n";
+                });
+                event.message.channel.sendMessage("```javascript\n" + reply + "```\n");
+            });
         });
-    });
-    request.on('error', function (err) {
-        return collectError(event, {name: 'coinmarketcap webscraping'}, err);
-    });
+        request.on('error', function (err) {
+            return collectError(event, {name: 'coinmarketcap webscraping'}, err);
+        });
+    }
+    catch (error) {
+        event.message.channel.sendMessage("Sorry, could not fetch the new coins. Please try again later");
+    }
 }
 
 function isNumeric(n) {
