@@ -156,12 +156,17 @@ function printList(event) {
 }
 
 function printTag(event, result) {
+    try {
         let value = "Pending Payout : " + result.pending_payout_value;
         value += "\nTotal Votes : " + result.net_votes;
         value += "\nPosted Time : " + time_ago(new Date(result.created) - (1000 * 60));
         value += "\nhttps://steemit.com" + result.url;
         event.message.channel.sendMessage(value);
     }
+    catch (error) {
+        event.message.channel.sendMessage('Error in Steemit, please try again later');
+    }
+}
 
 
 function getNewCoins(event, limit) {
