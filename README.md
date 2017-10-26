@@ -1,3 +1,3 @@
 # BitBot
 
-A Discord Bot, which do a lot of things
+A Discord Bot, which do a lot of things like 
