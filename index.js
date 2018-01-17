@@ -67,8 +67,8 @@ function getCoinMarketCapScreenshot(event, coin) {
             if (response[0] === undefined) {
                 return getFallbackCoinMarketCapScreenshot(event, coin);
             }
-            const value = coin.toUpperCase() + " : Current Price " + response[0].price_usd +
-                " | 24 Hour Percentage Change " + response[0].percent_change_24h;
+            const value = "```javascript\n" + coin.toUpperCase() + " : Current Price " + response[0].price_usd +
+                " USD | 24 Hour Percentage Change " + response[0].percent_change_24h + " ```\n";
             event.message.channel.sendMessage(value);
             //getCoinScreenshot(event, coin);
         }
