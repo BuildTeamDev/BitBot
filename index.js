@@ -50,7 +50,8 @@ function getCoinScreenshot(event, coin) {
 function getFallbackCoinMarketCapScreenshot(event, coin) {
     for (let i = 0; i < cryptoValues.length; i++) {
         if (cryptoValues[i].symbol.toUpperCase() === coin.toUpperCase()) {
-            return getCoinScreenshot(event, cryptoValues[i].id);
+            //return getCoinScreenshot(event, cryptoValues[i].id);
+            return getCoinMarketCapScreenshot(event, cryptoValues[i].id);
         }
     }
     event.message.channel.sendMessage(`The symbol ${coin} is not on coinmarketcap.com, sorry!`);
@@ -69,7 +70,7 @@ function getCoinMarketCapScreenshot(event, coin) {
             const value = coin.toUpperCase() + " : Current Price " + response[0].price_usd +
                 " | 24 Hour Percentage Change " + response[0].percent_change_24h;
             event.message.channel.sendMessage(value);
-            getCoinScreenshot(event, coin);
+            //getCoinScreenshot(event, coin);
         }
         catch (error) {
             event.message.channel.sendMessage(`The coin ${coin} is not available, sorry!`);
