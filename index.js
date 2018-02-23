@@ -8,7 +8,7 @@ const webshot = require('webshot');
 const fs = require('fs');
 const steem = require('steem');
 const cryptoValues = require("./crypto.json");
-const client = new Discordie();
+const client = new Discordie({autoReconnect: true});
 const cheerio = require('cheerio');
 const time_ago = require('time_ago_in_words');
 
